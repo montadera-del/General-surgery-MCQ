@@ -434,7 +434,8 @@
             showMessage('Creating account...', false);
 
             try {
-                const response = await fetch('api/auth.php', {
+                const API_BASE = 'https://relaxreading.rf.gd/api/';
+                const API_AUTH = API_BASE + 'auth.php';, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'register', username, email, password })
