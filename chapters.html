@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>Chapters | MasterPass</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', system-ui, sans-serif;
+            background: linear-gradient(145deg, #eef2f7 0%, #d4dce6 100%);
+            min-height: 100vh;
+            padding: max(12px, 1.5vh) max(16px, 2vw);
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        .header {
+            background: var(--book-color, #2c5f2d);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 28px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .header h1 { font-size: clamp(1.2rem, 5vw, 1.6rem); }
+        .user-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .user-badge {
+            background: rgba(255,255,255,0.15);
+            padding: 6px 15px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+        }
+        .back-link, .logout-btn {
+            background: rgba(255,255,255,0.15);
+            padding: 6px 15px;
+            border-radius: 30px;
+            text-decoration: none;
+            color: white;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        .back-link:hover, .logout-btn:hover { background: rgba(255,255,255,0.25); }
+        .stats-bar {
+            background: white;
+            border-radius: 20px;
+            padding: 15px 25px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .stats-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f0f4f8;
+            padding: 8px 18px;
+            border-radius: 40px;
+        }
+        .stats-item span:first-child { font-weight: 600; color: #1e4a76; }
+        .stats-item span:last-child { color: #2c5f2d; font-weight: 700; }
+        .chapters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .chapter-card {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 6px solid var(--book-color, #2c5f2d);
+        }
+        .chapter-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+        .chapter-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #0a2540;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .chapter-stats {
+            display: flex;
+            gap: 20px;
+            margin: 15px 0;
+            font-size: 0.85rem;
+            color: #4a627a;
+            flex-wrap: wrap;
+        }
+        .chapter-stats span { background: #f0f4f8; padding: 4px 12px; border-radius: 20px; }
+        .progress-bar-container {
+            background: #e2e8f0;
+            border-radius: 20px;
+            height: 10px;
+            margin: 12px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            background: var(--book-color, #2c5f2d);
+            height: 100%;
+            border-radius: 20px;
+            transition: width 0.3s;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .btn-start, .btn-review {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 40px;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+            font-size: 0.85rem;
+        }
+        .btn-start {
+            background: var(--book-color, #2c5f2d);
+            color: white;
+        }
+        .btn-start:hover {
+            filter: brightness(0.9);
+            transform: scale(1.02);
+        }
+        .btn-review {
+            background: #e67e22;
+            color: white;
+        }
+        .btn-review:hover:not(:disabled) {
+            background: #f39c12;
+            transform: scale(1.02);
+        }
+        .btn-review:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .error-message {
+            background: #fee2e2;
+            border-left: 5px solid #dc2626;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            color: #991b1b;
+        }
+        .footer-note {
+            background: #fef9e6;
+            padding: 16px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: #856404;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .loading { text-align: center; padding: 40px; color: #2c5f2d; }
+        @media (max-width: 700px) {
+            .stats-bar { flex-direction: column; align-items: stretch; }
+            .stats-item { justify-content: space-between; }
+            .button-group { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+<div class="header" id="pageHeader">
+<h1 id="bookTitle">📚 </h1>
+<div class="user-info"><span class="user-badge" id="userDisplay">👤 Loading...</span> <a href="../../index.html" class="back-link">🏠 Library Home</a> <button onclick="logout()" class="logout-btn">🚪 Logout</button></div>
+</div>
+<div class="stats-bar">
+<div class="stats-item"><span>📊 Overall Progress</span><span id="overallProgress">0%</span></div>
+<div class="stats-item"><span>✅ Completed Chapters</span><span id="completedCount">0 / 0</span></div>
+<div class="stats-item"><span>⭐ Total Correct</span><span id="totalCorrect">0</span></div>
+<div class="stats-item"><span>❌ Total Incorrect</span><span id="totalIncorrect">0</span></div>
+</div>
+<div class="chapters-grid" id="chaptersGrid">
+<div class="loading">Loading chapters...</div>
+</div>
+<div class="footer-note" style="text-align: left;">by ℳ. ℋ. 𝒜𝓁𝒷𝒶𝓀𝒶𝒶</div>
+</div>
+<p>
+<script>
+    // ============================================
+    // API PATHS
+    // ============================================
+    const API_AUTH = '../../api/auth.php';
+    const API_SYNC = '../../api/sync_progress.php';
+    const API_CHAPTERS = '../../api/get_chapters.php';
+    const API_BOOK = '../../api/get_book.php';
+
+    // Get book_id from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const BOOK_ID = parseInt(urlParams.get('book_id')) || 0;
+    
+    let currentUserId = null;
+    let bookColor = '#2c5f2d';  // default green
+    let bookIcon = '📚';
+    let bookName = '';
+
+    // ============================================
+    // LOAD BOOK INFO (for color)
+    // ============================================
+    async function loadBookInfo() {
+        if (!BOOK_ID) return;
+        try {
+            const response = await fetch(`${API_BOOK}?book_id=${BOOK_ID}`);
+            const result = await response.json();
+            if (result.success && result.book) {
+                bookColor = result.book.color || '#2c5f2d';
+                bookIcon = result.book.icon || '📚';
+                bookName = result.book.name || `Book ${BOOK_ID}`;
+                
+                // Apply color to header
+                document.getElementById('pageHeader').style.setProperty('--book-color', bookColor);
+                document.getElementById('bookTitle').innerHTML = `${bookIcon} ${bookName} - Chapters`;
+                document.title = `${bookName} | Chapters`;
+            }
+        } catch(e) {
+            console.error('Failed to load book info:', e);
+        }
+    }
+
+    // ============================================
+    // LOGIN & AUTH
+    // ============================================
+    async function checkUserSession() {
+        const token = localStorage.getItem('session_token');
+        if (!token) { 
+            localStorage.setItem('redirectAfterLogin', window.location.pathname + window.location.search);
+            window.location.href = '../../login.html';
+            return false;
+        }
+        try {
+            const response = await fetch(API_AUTH, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'verify', token: token })
+            });
+            const result = await response.json();
+            if (result.success) {
+                currentUserId = result.user_id;
+                const username = localStorage.getItem('username') || 'User';
+                document.getElementById('userDisplay').innerHTML = `👤 ${username}`;
+                return true;
+            } else {
+                localStorage.clear();
+                window.location.href = '../../login.html';
+                return false;
+            }
+        } catch(e) {
+            window.location.href = '../../login.html';
+            return false;
+        }
+    }
+
+    // ============================================
+    // FETCH CHAPTERS FOR THIS BOOK
+    // ============================================
+    async function fetchChapters() {
+        if (!BOOK_ID) {
+            document.getElementById('chaptersGrid').innerHTML = `
+                <div class="error-message">
+                    ❌ No book selected. Please go back to the library.
+                </div>
+            `;
+            return null;
+        }
+        try {
+            const response = await fetch(`${API_CHAPTERS}?book_id=${BOOK_ID}`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const result = await response.json();
+            if (result.success && Array.isArray(result.chapters) && result.chapters.length > 0) {
+                return result.chapters;
+            } else {
+                throw new Error(result.error || 'No chapters found for this book');
+            }
+        } catch(e) {
+            console.error('Failed to fetch chapters:', e);
+            document.getElementById('chaptersGrid').innerHTML = `
+                <div class="error-message">
+                    ❌ Failed to load chapters.<br>
+                    ${e.message}
+                </div>
+            `;
+            return null;
+        }
+    }
+
+    // ============================================
+    // LOAD PROGRESS FOR A SINGLE CHAPTER
+    // ============================================
+    async function loadProgressForChapter(chapterKey, totalQuestions) {
+        const token = localStorage.getItem('session_token');
+        try {
+            const response = await fetch(API_SYNC, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    action: 'load', 
+                    token: token, 
+                    book_id: BOOK_ID, 
+                    chapter_key: chapterKey 
+                })
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                let incorrectIndices = [];
+                if (result.incorrect_questions) {
+                    if (typeof result.incorrect_questions === 'string') {
+                        incorrectIndices = JSON.parse(result.incorrect_questions);
+                    } else if (Array.isArray(result.incorrect_questions)) {
+                        incorrectIndices = result.incorrect_questions;
+                    }
+                }
+                const answersState = result.quiz_state?.answersState || [];
+                const answeredCount = answersState.filter(a => a.submitted).length;
+                const correctCount = answersState.filter(a => a.submitted && a.isCorrect).length;
+                const incorrectCount = incorrectIndices.length;
+                
+                return {
+                    answered: answeredCount,
+                    correct: correctCount,
+                    incorrect: incorrectCount,
+                    total: totalQuestions,
+                    hasIncorrect: incorrectCount > 0
+                };
+            }
+            return { answered: 0, correct: 0, incorrect: 0, total: totalQuestions, hasIncorrect: false };
+        } catch(e) {
+            console.error(`Error loading progress for ${chapterKey}:`, e);
+            return { answered: 0, correct: 0, incorrect: 0, total: totalQuestions, hasIncorrect: false };
+        }
+    }
+
+    // ============================================
+    // RENDER CHAPTERS
+    // ============================================
+    async function renderChapters() {
+        const chapters = await fetchChapters();
+        if (!chapters) return;
+
+        let totalCorrect = 0;
+        let totalIncorrect = 0;
+        let totalQuestions = 0;
+        let completedCount = 0;
+
+        const progressPromises = chapters.map(ch => {
+            const totalQ = ch.end_question_idx - ch.start_question_idx;
+            return loadProgressForChapter(ch.chapter_key, totalQ);
+        });
+        const progressResults = await Promise.all(progressPromises);
+        
+        const grid = document.getElementById('chaptersGrid');
+        let html = '';
+        
+        for (let i = 0; i < chapters.length; i++) {
+            const chapter = chapters[i];
+            const progress = progressResults[i];
+            const percentComplete = progress.total > 0 ? Math.round((progress.answered / progress.total) * 100) : 0;
+            
+            totalCorrect += progress.correct;
+            totalIncorrect += progress.incorrect;
+            totalQuestions += progress.total;
+            if (progress.answered === progress.total) completedCount++;
+            
+            html += `
+                <div class="chapter-card" style="--book-color: ${bookColor}">
+                    <div class="chapter-title">
+                        <span>${chapter.icon || '📝'}</span> ${chapter.chapter_name}
+                    </div>
+                    <div class="chapter-stats">
+                        <span>📊 ${progress.answered}/${progress.total} answered</span>
+                        <span>✅ ${progress.correct} correct</span>
+                        <span>❌ ${progress.incorrect} incorrect</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" style="width: ${percentComplete}%; background: ${bookColor};"></div>
+                    </div>
+                    <div class="button-group">
+                        <a href="mock.html?book_id=${BOOK_ID}&chapter_key=${chapter.chapter_key}" class="btn-start" style="background: ${bookColor};">📖 Start / Continue</a>
+                        <button class="btn-review" 
+                                data-chapter-key="${chapter.chapter_key}" 
+                                data-chapter-name="${chapter.chapter_name}" 
+                                data-start="${chapter.start_question_idx}" 
+                                data-end="${chapter.end_question_idx}" 
+                                ${!progress.hasIncorrect ? 'disabled' : ''}>
+                            📚 Review Incorrect (${progress.incorrect})
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        grid.innerHTML = html;
+        
+        const overallPercent = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+        document.getElementById('overallProgress').innerHTML = `${overallPercent}%`;
+        document.getElementById('completedCount').innerHTML = `${completedCount} / ${chapters.length}`;
+        document.getElementById('totalCorrect').innerHTML = totalCorrect;
+        document.getElementById('totalIncorrect').innerHTML = totalIncorrect;
+        
+        // Attach review button events
+        document.querySelectorAll('.btn-review:not([disabled])').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const chapterKey = btn.dataset.chapterKey;
+                const chapterName = btn.dataset.chapterName;
+                const startIdx = parseInt(btn.dataset.start);
+                const endIdx = parseInt(btn.dataset.end);
+                
+                localStorage.setItem('reviewChapterKey', chapterKey);
+                localStorage.setItem('reviewChapterName', chapterName);
+                localStorage.setItem('reviewBookId', BOOK_ID);
+                localStorage.setItem('reviewChapterStartIdx', startIdx);
+                localStorage.setItem('reviewChapterEndIdx', endIdx);
+                
+                window.location.href = 'review.html';
+            });
+        });
+    }
+
+    // ============================================
+    // LOGOUT
+    // ============================================
+    function logout() {
+        const token = localStorage.getItem('session_token');
+        if (token) {
+            fetch(API_AUTH, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ action: 'logout', token: token }) 
+            }).catch(e => {});
+        }
+        localStorage.clear();
+        window.location.href = '../../login.html';
+    }
+
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    async function init() {
+        await loadBookInfo();
+        const loggedIn = await checkUserSession();
+        if (loggedIn) {
+            await renderChapters();
+        }
+    }
+    
+    init();
+</script>
+</p>
+</body>
+</html>

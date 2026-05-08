@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>Review Incorrect Questions | MasterPass</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', system-ui, sans-serif;
+            background: linear-gradient(145deg, #eef2f7 0%, #d4dce6 100%);
+            min-height: 100vh;
+            padding: max(12px, 1.5vh) max(16px, 2vw);
+        }
+        .review-card {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: clamp(24px, 4vw, 36px);
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.25);
+            overflow: visible;
+        }
+        .review-header {
+            padding: clamp(12px, 2vh, 20px) clamp(16px, 3vw, 28px);
+            background: #e67e22;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .title-section h1 { font-size: clamp(1rem, 4vw, 1.3rem); font-weight: 600; }
+        .title-section p { font-size: clamp(0.65rem, 2.5vw, 0.75rem); opacity: 0.8; margin-top: 4px; }
+        .home-link, .book-link {
+            background: rgba(255,255,255,0.15);
+            padding: 6px 15px;
+            border-radius: 30px;
+            text-decoration: none;
+            color: white;
+            font-size: 0.8rem;
+            transition: background 0.2s;
+        }
+        .home-link:hover, .book-link:hover { background: rgba(255,255,255,0.25); }
+        .stats-group {
+            display: flex;
+            gap: 12px;
+            background: rgba(255,255,255,0.12);
+            padding: 8px 16px;
+            border-radius: 60px;
+        }
+        .stat-item { font-size: clamp(0.7rem, 2.5vw, 0.85rem); font-weight: 500; }
+        .nav-header-section {
+            padding: clamp(8px, 1.5vh, 14px) clamp(12px, 3vw, 24px);
+            background: #f8fafd;
+            border-bottom: 1px solid #e2edf2;
+        }
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .nav-title { font-size: clamp(0.7rem, 2.8vw, 0.8rem); font-weight: 600; color: #1e4a76; }
+        .legend {
+            display: flex;
+            gap: clamp(10px, 2.5vw, 20px);
+            font-size: clamp(0.6rem, 2.2vw, 0.7rem);
+        }
+        .legend span { display: inline-flex; align-items: center; gap: 5px; }
+        .legend-color { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+        .sticky-strip-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #f8fafd;
+            border-bottom: 1px solid #e2edf2;
+            padding: 8px clamp(12px, 3vw, 24px);
+        }
+        .question-strip-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .scroll-btn {
+            background: #e2e8f0;
+            border: none;
+            width: 32px;
+            height: 44px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #1e4a76;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            touch-action: manipulation;
+        }
+        .scroll-btn:hover { background: #cbd5e1; }
+        .scroll-btn:active { transform: scale(0.95); }
+        .question-strip {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 8px;
+            padding: 6px 4px 8px 4px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            flex: 1;
+            scrollbar-width: thin;
+        }
+        .question-strip::-webkit-scrollbar { height: 4px; }
+        .question-strip::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
+        .question-strip::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        .nav-q-btn {
+            flex: 0 0 auto;
+            width: clamp(40px, 8vw, 52px);
+            height: clamp(40px, 8vw, 52px);
+            border-radius: 16px;
+            background: #f1f5f9;
+            border: 1.5px solid #e2e8f0;
+            font-weight: 700;
+            font-size: clamp(0.85rem, 3vw, 1rem);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            color: #1e293b;
+        }
+        .nav-q-btn.unanswered { background: #f1f5f9; border-left: 5px solid #94a3b8; }
+        .nav-q-btn.correct { background: #d1fae5; border-left: 5px solid #10b981; color: #065f46; }
+        .nav-q-btn.incorrect { background: #fee2e2; border-left: 5px solid #ef4444; color: #991b1b; }
+        .nav-q-btn.current { background: #e0f2fe; border: 2px solid #e67e22; box-shadow: 0 0 0 2px #f5c6a0; font-weight: 800; }
+        .question-body {
+            padding: clamp(20px, 4vh, 32px) clamp(20px, 5vw, 40px);
+        }
+        .question-text {
+            font-size: clamp(1rem, 4.5vw, 1.35rem);
+            font-weight: 500;
+            line-height: 1.5;
+            color: #0a2540;
+            background: #fafcff;
+            padding: clamp(14px, 2vh, 20px);
+            border-radius: 24px;
+            border-left: 5px solid #e67e22;
+            scroll-margin-top: 90px;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 24px;
+        }
+        .question-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .action-icon {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 30px;
+            transition: all 0.2s;
+            line-height: 1;
+        }
+        .action-icon:hover {
+            transform: scale(1.1);
+            background: rgba(0,0,0,0.05);
+        }
+        .report-icon { color: #dc2626; }
+        .favorite-icon { color: #f0b429; }
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: clamp(12px, 2vh, 18px);
+            margin-bottom: clamp(24px, 4vh, 32px);
+            scroll-margin-top: 90px;
+        }
+        .option-item {
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 20px;
+            padding: clamp(14px, 2.5vh, 20px) clamp(16px, 3vw, 24px);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: clamp(12px, 2.5vw, 18px);
+        }
+        .option-item:hover { background: #f9fcff; border-color: #bdd3e8; transform: translateX(4px); }
+        .option-item.submitted-correct { background: #e3f7ec; border-color: #2b8c5e; }
+        .option-item.submitted-wrong { background: #fee9e6; border-color: #d9534f; }
+        .option-item.selected-pending { background: #fff8e7; border-color: #f0b429; box-shadow: 0 0 0 1px #f0b429; }
+        .option-prefix {
+            font-weight: 700;
+            font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+            background: #f0f4f9;
+            width: clamp(36px, 7vw, 44px);
+            height: clamp(36px, 7vw, 44px);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 40px;
+            color: #1e466e;
+            flex-shrink: 0;
+        }
+        .option-text {
+            font-size: clamp(0.85rem, 3.2vw, 1rem);
+            line-height: 1.45;
+            color: #1e2f3e;
+            flex: 1;
+        }
+        .feedback-card {
+            border-radius: 20px;
+            padding: clamp(14px, 2.5vh, 20px) clamp(16px, 3vw, 24px);
+            margin: 16px 0 20px 0;
+            border-left: 6px solid;
+            font-size: clamp(0.85rem, 3vw, 0.95rem);
+            scroll-margin-top: 90px;
+        }
+        .feedback-correct { background: #eef7f1; border-left-color: #2b8c5e; }
+        .feedback-wrong { background: #fef4f2; border-left-color: #d9534f; }
+        .explanation { margin-top: 10px; line-height: 1.5; }
+        .action-area {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 20px 0 16px;
+        }
+        .action-row {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .btn-main, .btn-secondary {
+            width: 100%;
+            border: none;
+            padding: clamp(14px, 2.5vh, 18px);
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: clamp(0.9rem, 3.5vw, 1.05rem);
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-main {
+            background: #e67e22;
+            color: white;
+        }
+        .btn-main:hover {
+            background: #f39c12;
+            transform: scale(1.02);
+        }
+        .btn-secondary {
+            background: #2c5f2d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #3a7a3b;
+            transform: scale(1.02);
+        }
+        @media (min-width: 768px) {
+            .action-row {
+                flex-direction: row;
+                justify-content: flex-start;
+                align-items: center;
+                gap: 20px;
+            }
+            .btn-main, .btn-secondary {
+                width: auto;
+                min-width: 200px;
+            }
+        }
+        .progress-container {
+            background: #f8fafd;
+            padding: 12px 20px;
+            border-bottom: 1px solid #e2edf2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .progress-text {
+            font-weight: 600;
+            color: #1e4a76;
+        }
+        .loading-container { text-align: center; padding: 60px 20px; color: #e67e22; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #e67e22;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .user-display {
+            font-size: 0.8rem;
+            background: rgba(255,255,255,0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .sync-status {
+            font-size: 0.7rem;
+            margin-left: 10px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.2);
+        }
+        .no-questions {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .no-questions h2 { color: #2c5f2d; margin-bottom: 20px; }
+        .bottom-nav {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .bottom-nav a {
+            background: #f0f2f5;
+            color: #4a627a;
+            padding: 10px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+        hr { margin: 24px 0 0; border: none; border-top: 1px solid #e9edf2; }
+        @media (min-width: 1024px) {
+            .options-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        }
+        .ai-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .ai-btn {
+            color: white;
+            border: none;
+            border-radius: 60px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .gemini-btn { background: #4285f4; }
+        .gemini-btn:hover { background: #3367d6; }
+        .deepseek-btn { background: #0e9f6e; }
+        .deepseek-btn:hover { background: #0b8156; }
+        .chatgpt-btn { background: #10a37f; }
+        .chatgpt-btn:hover { background: #0e8b6a; }
+        .footer-note {
+            background: #fef9e6;
+            padding: clamp(10px, 2vh, 16px);
+            font-size: clamp(0.65rem, 2.5vw, 0.75rem);
+            color: #856404;
+            text-align: center;
+            border-top: 1px solid #ffeeba;
+        }
+    </style>
+</head>
+<body>
+<div class="review-card" id="reviewRoot">
+<div class="review-header">
+<div class="title-section">
+<h1>📚 Review Incorrect Questions</h1>
+<p id="chapterTitle">MasterPass | Review Mode</p>
+</div>
+<div style="display: flex; gap: 10px; align-items: center;"><span id="syncStatus" class="sync-status">☁️ Synced</span> <span id="userDisplay" class="user-display">👤 Loading...</span> <a href="index.html" class="book-link">📚 Book Home</a> <a href="../../index.html" class="home-link">🏠 Library</a></div>
+<div class="stats-group">
+<div class="stat-item" id="progressDisplay">📊 0 / 0 reviewed</div>
+<div class="stat-item" id="scoreDisplay">⭐ 0 / 0</div>
+</div>
+</div>
+<div class="nav-header-section">
+<div class="nav-header">
+<div class="nav-title">📌 REVIEW NAVIGATOR</div>
+<div class="legend">
+<div class="legend-color" style="background: #f1f5f9; border-left: 3px solid #94a3b8;"></div>
+<span>Not Reviewed</span>
+<div class="legend-color" style="background: #d1fae5; border-left: 3px solid #10b981;"></div>
+<span>Got Correct</span>
+<div class="legend-color" style="background: #fee2e2; border-left: 3px solid #ef4444;"></div>
+<span>Still Incorrect</span>
+<div class="legend-color" style="background: #e0f2fe; border: 2px solid #e67e22;"></div>
+<span>Current</span></div>
+</div>
+</div>
+<div class="sticky-strip-wrapper" id="stickyStrip">
+<div class="question-strip-wrapper"><button class="scroll-btn" id="scrollLeftBtn">◀</button>
+<div id="questionStrip" class="question-strip"></div>
+<button class="scroll-btn" id="scrollRightBtn">▶</button></div>
+</div>
+<div id="dynamicContent">
+<div class="loading-container">
+<div class="loader"></div>
+<p>Loading review questions...</p>
+</div>
+</div>
+<div class="footer-note" style="text-align: left;">by ℳ. ℋ. 𝒜𝓁𝒷𝒶𝓀𝒶𝒶</div>
+</div>
+<p>
+<script>
+    // ============================================
+    // API PATHS
+    // ============================================
+    const API_GET_QUESTIONS = '../../api/api_get_questions.php?limit=5000&random=0';
+    const API_CHECK_ANSWER = '../../api/api_check_answer.php';
+    const API_AUTH = '../../api/auth.php';
+    const API_SYNC = '../../api/sync_progress.php';
+    const API_FAVORITE_LISTS = '../../api/favorite_lists.php';
+    const API_REPORT_QUESTION = '../../api/report_question.php';
+    const API_CHAPTER_CONFIG = '../../api/get_chapter_config.php';
+
+    // ============================================
+    // REVIEW CONFIGURATION FROM localStorage
+    // ============================================
+    const reviewChapterKey = localStorage.getItem('reviewChapterKey');
+    const reviewBookId = parseInt(localStorage.getItem('reviewBookId'));
+    const reviewChapterName = localStorage.getItem('reviewChapterName');
+    
+    console.log('=== REVIEW CONFIGURATION ===');
+    console.log('reviewChapterKey:', reviewChapterKey);
+    console.log('reviewBookId:', reviewBookId);
+    console.log('reviewChapterName:', reviewChapterName);
+    console.log('============================');
+    
+    if (!reviewChapterKey || !reviewBookId) {
+        alert('No review data found. Please go back to the exam menu.');
+        window.location.href = 'index.html';
+    }
+    
+    document.getElementById('chapterTitle').innerHTML = `${reviewChapterName} | Review Incorrect Questions`;
+
+    // ============================================
+    // GLOBAL VARIABLES
+    // ============================================
+    let reviewQuestions = [];
+    let reviewAnswersState = [];
+    let allMockQuestions = [];
+    let currentIndex = 0;
+    let loading = true;
+    let currentUserId = null;
+    let syncTimeout = null;
+    let tempSelectedAnswer = null;
+    let showFeedback = false;
+    
+    let favoritedQuestionIds = new Set();
+    let userFavoriteLists = [];
+    let currentQuestionLists = new Set();
+    
+    let chapterConfig = null;
+    let totalQuestionsInMock = 0;
+
+    // ============================================
+    // LOAD CHAPTER CONFIGURATION FROM API
+    // ============================================
+    async function loadChapterConfig() {
+        try {
+            const response = await fetch(`${API_CHAPTER_CONFIG}?book_id=${reviewBookId}&chapter_key=${reviewChapterKey}`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const result = await response.json();
+            if (result.success) {
+                chapterConfig = result.config;
+                totalQuestionsInMock = chapterConfig.end_question_idx - chapterConfig.start_question_idx;
+                console.log('Chapter config loaded:', chapterConfig);
+                console.log('Total questions in this chapter:', totalQuestionsInMock);
+                console.log('Question range (global indices):', chapterConfig.start_question_idx, 'to', chapterConfig.end_question_idx);
+                return true;
+            } else {
+                throw new Error(result.error);
+            }
+        } catch(e) {
+            console.error('Failed to load chapter config:', e);
+            document.getElementById('dynamicContent').innerHTML = `
+                <div class="no-questions">
+                    <h2>❌ Failed to load chapter configuration</h2>
+                    <p>${e.message}</p>
+                    <br>
+                    <a href="index.html" class="btn-main" style="display: inline-block; text-decoration: none;">Back to Exam Menu</a>
+                </div>
+            `;
+            return false;
+        }
+    }
+
+    // ============================================
+    // CLOUD SYNC
+    // ============================================
+    function updateSyncStatus(status, isSaving = false) {
+        const statusEl = document.getElementById('syncStatus');
+        if (!statusEl) return;
+        if (isSaving) {
+            statusEl.textContent = '💾 Saving...';
+            statusEl.className = 'sync-status saving';
+        } else {
+            statusEl.textContent = '☁️ Synced';
+            statusEl.className = 'sync-status saved';
+        }
+    }
+
+    async function saveReviewProgressToCloud() {
+        if (!currentUserId) return;
+        updateSyncStatus('', true);
+        try {
+            const token = localStorage.getItem('session_token');
+            const reviewData = {
+                answersState: reviewAnswersState,
+                currentIndex: currentIndex,
+                showFeedback: showFeedback,
+                tempSelectedAnswer: tempSelectedAnswer
+            };
+            await fetch(API_SYNC, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'save',
+                    token: token,
+                    book_id: reviewBookId,
+                    chapter_key: reviewChapterKey + '_review',
+                    quiz_state: JSON.stringify(reviewData)
+                })
+            });
+            updateSyncStatus('saved', false);
+        } catch(e) {
+            console.error('Save error:', e);
+            updateSyncStatus('error', false);
+        }
+    }
+
+    async function loadReviewProgressFromCloud() {
+        if (!currentUserId) return null;
+        try {
+            const token = localStorage.getItem('session_token');
+            const response = await fetch(API_SYNC, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    action: 'load', 
+                    token: token, 
+                    book_id: reviewBookId, 
+                    chapter_key: reviewChapterKey + '_review'
+                })
+            });
+            const result = await response.json();
+            if (result.success && result.quiz_state) {
+                const quizState = typeof result.quiz_state === 'string' ? JSON.parse(result.quiz_state) : result.quiz_state;
+                return quizState;
+            }
+            return null;
+        } catch(e) { 
+            console.error('Load from cloud error:', e);
+            return null; 
+        }
+    }
+
+    function debouncedSave() {
+        if (syncTimeout) clearTimeout(syncTimeout);
+        syncTimeout = setTimeout(() => saveReviewProgressToCloud(), 1000);
+    }
+
+    // ============================================
+    // FAVORITE FUNCTIONS (simplified)
+    // ============================================
+    async function loadAllFavoriteQuestionIds() {
+        const token = localStorage.getItem('session_token');
+        if (!token) return;
+        try {
+            const response = await fetch(`${API_FAVORITE_LISTS}?action=get_all_favorites&token=${token}`);
+            const result = await response.json();
+            if (result.success && Array.isArray(result.question_ids)) {
+                favoritedQuestionIds.clear();
+                result.question_ids.forEach(id => favoritedQuestionIds.add(id));
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    async function loadFavoriteLists() {
+        const token = localStorage.getItem('session_token');
+        if (!token) return;
+        try {
+            const response = await fetch(`${API_FAVORITE_LISTS}?action=get_lists&token=${token}`);
+            const result = await response.json();
+            if (result.success) userFavoriteLists = result.lists;
+        } catch(e) { console.error(e); }
+    }
+
+    async function toggleFavorite(questionId) {
+        alert('⭐ Favorites feature: Click the star to add to your favorite lists.\n\nYou can manage your lists from the Favorites page.');
+    }
+
+    // ============================================
+    // REPORT FUNCTION
+    // ============================================
+    async function reportQuestion() {
+        const q = reviewQuestions[currentIndex]?.question;
+        if (!q) return;
+        if (!confirm(`Report this question for review?\n\n"${q.text.substring(0, 100)}..."`)) return;
+        const token = localStorage.getItem('session_token');
+        const reportBtn = document.getElementById('reportBtn');
+        if (reportBtn) {
+            reportBtn.innerHTML = '⏳';
+            reportBtn.disabled = true;
+        }
+        try {
+            const response = await fetch(API_REPORT_QUESTION, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    token: token,
+                    question_id: q.id,
+                    book_id: reviewBookId,
+                    chapter_key: reviewChapterKey
+                })
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert('✅ Question reported. Thank you!');
+                if (reportBtn) {
+                    reportBtn.innerHTML = '✅';
+                    setTimeout(() => {
+                        reportBtn.innerHTML = '⛔';
+                        reportBtn.disabled = false;
+                    }, 2000);
+                }
+            } else {
+                alert('Error: ' + (result.error || 'Could not report question'));
+                if (reportBtn) {
+                    reportBtn.innerHTML = '⛔';
+                    reportBtn.disabled = false;
+                }
+            }
+        } catch(e) {
+            alert('Network error: ' + e.message);
+            if (reportBtn) {
+                reportBtn.innerHTML = '⛔';
+                reportBtn.disabled = false;
+            }
+        }
+    }
+
+    // ============================================
+    // AI FUNCTIONS
+    // ============================================
+    function formatQuestionText(q) {
+        let text = `Question: ${q.text}\n\nOptions:\n`;
+        const letters = ['A', 'B', 'C', 'D', 'E'];
+        for (let l of letters) {
+            if (q.options[l]) text += `${l}. ${q.options[l]}\n`;
+        }
+        text += `\nCorrect answer: ${q.correct_answer}\n\nPlease explain why this is correct and why the other options are wrong.`;
+        return text;
+    }
+
+    async function askGemini() {
+        const q = reviewQuestions[currentIndex]?.question;
+        if (!q) return;
+        const text = formatQuestionText(q);
+        try {
+            await navigator.clipboard.writeText(text);
+            alert('✅ Question and options copied!\n\nOpen Gemini (gemini.google.com) and press Ctrl+V to paste.');
+        } catch(e) {
+            alert('❌ Could not copy automatically. Please copy manually.');
+        }
+        window.open('https://gemini.google.com/', '_blank');
+    }
+
+    async function askDeepSeek() {
+        const q = reviewQuestions[currentIndex]?.question;
+        if (!q) return;
+        const text = formatQuestionText(q);
+        try {
+            await navigator.clipboard.writeText(text);
+            alert('✅ Question and options copied!\n\nOpen DeepSeek Chat (chat.deepseek.com) and press Ctrl+V to paste.');
+        } catch(e) {
+            alert('❌ Could not copy automatically. Please copy manually.');
+        }
+        window.open('https://chat.deepseek.com/', '_blank');
+    }
+
+    async function askChatGPT() {
+        const q = reviewQuestions[currentIndex]?.question;
+        if (!q) return;
+        const text = formatQuestionText(q);
+        try {
+            await navigator.clipboard.writeText(text);
+            alert('✅ Question and options copied!\n\nOpen ChatGPT (chat.openai.com) and press Ctrl+V to paste.');
+        } catch(e) {
+            alert('❌ Could not copy automatically. Please copy manually.');
+        }
+        window.open('https://chat.openai.com/', '_blank');
+    }
+
+    // ============================================
+    // LOAD INCORRECT QUESTIONS
+    // ============================================
+    async function loadIncorrectQuestions() {
+        try {
+            const token = localStorage.getItem('session_token');
+            
+            // Step 1: Load the saved progress for this specific chapter from cloud
+            const response = await fetch(API_SYNC, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    action: 'load', 
+                    token: token, 
+                    book_id: reviewBookId, 
+                    chapter_key: reviewChapterKey
+                })
+            });
+            const result = await response.json();
+            
+            console.log('=== CLOUD PROGRESS RESPONSE ===');
+            console.log('Full response:', result);
+            
+            let incorrectQuestionIndices = [];
+            
+            if (result.success) {
+                if (result.incorrect_questions) {
+                    if (typeof result.incorrect_questions === 'string') {
+                        incorrectQuestionIndices = JSON.parse(result.incorrect_questions);
+                    } else if (Array.isArray(result.incorrect_questions)) {
+                        incorrectQuestionIndices = result.incorrect_questions;
+                    }
+                }
+                console.log('Incorrect question indices (chapter-relative):', incorrectQuestionIndices);
+                console.log('Number of incorrect questions:', incorrectQuestionIndices.length);
+            } else {
+                console.log('No progress found or error in response');
+            }
+            
+            if (!incorrectQuestionIndices || incorrectQuestionIndices.length === 0) {
+                document.getElementById('dynamicContent').innerHTML = `
+                    <div class="no-questions">
+                        <h2>🎉 No Incorrect Questions!</h2>
+                        <p>You got all questions correct in ${reviewChapterName}.</p>
+                        <br>
+                        <a href="mock.html?book_id=${reviewBookId}&chapter_key=${reviewChapterKey}" class="btn-main" style="display: inline-block; text-decoration: none;">Back to Chapter</a>
+                        <a href="index.html" class="btn-secondary" style="display: inline-block; text-decoration: none;">Back to Exam Menu</a>
+                    </div>
+                `;
+                loading = false;
+                return false;
+            }
+            
+            // Step 2: Load all questions from API
+            const allQuestionsResponse = await fetch(API_GET_QUESTIONS);
+            if (!allQuestionsResponse.ok) throw new Error('Network failed');
+            const allQuestions = await allQuestionsResponse.json();
+            if (allQuestions.error) throw new Error(allQuestions.error);
+            
+            // Step 3: IMPORTANT - Get questions using the chapter's start/end indices
+            const start = chapterConfig.start_question_idx;
+            const end = chapterConfig.end_question_idx;
+            
+            console.log(`Loading questions from global index ${start} to ${end}`);
+            console.log(`Total questions in DB: ${allQuestions.length}`);
+            
+            if (start >= allQuestions.length || end > allQuestions.length) {
+                console.error(`Chapter range ${start}-${end} exceeds DB size ${allQuestions.length}`);
+                document.getElementById('dynamicContent').innerHTML = `
+                    <div class="no-questions">
+                        <h2>⚠️ Configuration Error</h2>
+                        <p>The chapter range (${start} to ${end}) exceeds the database size (${allQuestions.length} questions).</p>
+                        <p>Please contact support to fix the chapter configuration.</p>
+                        <br>
+                        <a href="index.html" class="btn-main" style="display: inline-block; text-decoration: none;">Back to Exam Menu</a>
+                    </div>
+                `;
+                loading = false;
+                return false;
+            }
+            
+            allMockQuestions = allQuestions.slice(start, end);
+            console.log(`Loaded ${allMockQuestions.length} questions for this chapter`);
+            
+            if (allMockQuestions.length === 0) {
+                console.error('No questions loaded! Check start/end indices.');
+                document.getElementById('dynamicContent').innerHTML = `
+                    <div class="no-questions">
+                        <h2>⚠️ No Questions Found</h2>
+                        <p>No questions were found for indices ${start} to ${end}.</p>
+                        <p>Total questions in database: ${allQuestions.length}</p>
+                        <br>
+                        <a href="index.html" class="btn-main" style="display: inline-block; text-decoration: none;">Back to Exam Menu</a>
+                    </div>
+                `;
+                loading = false;
+                return false;
+            }
+            
+            // Step 4: Build review questions array with original indices
+            reviewQuestions = [];
+            for (let idx of incorrectQuestionIndices) {
+                if (idx >= 0 && idx < allMockQuestions.length) {
+                    reviewQuestions.push({
+                        question: allMockQuestions[idx],
+                        originalIndex: idx
+                    });
+                    console.log(`Added incorrect question: chapter index ${idx} -> Global question ID ${allMockQuestions[idx].id}`);
+                } else {
+                    console.warn(`Skipped invalid index: ${idx} (max is ${allMockQuestions.length - 1})`);
+                }
+            }
+            
+            console.log(`Created ${reviewQuestions.length} review questions`);
+            
+            if (reviewQuestions.length === 0) {
+                document.getElementById('dynamicContent').innerHTML = `
+                    <div class="no-questions">
+                        <h2>⚠️ No Valid Review Questions</h2>
+                        <p>The incorrect question indices (${incorrectQuestionIndices.join(', ')}) don't match this chapter (0-${allMockQuestions.length - 1}).</p>
+                        <p>This may happen if the chapter configuration changed. Please restart the chapter.</p>
+                        <br>
+                        <a href="mock.html?book_id=${reviewBookId}&chapter_key=${reviewChapterKey}" class="btn-main" style="display: inline-block; text-decoration: none;">Restart Chapter</a>
+                        <a href="index.html" class="btn-secondary" style="display: inline-block; text-decoration: none;">Back to Exam Menu</a>
+                    </div>
+                `;
+                loading = false;
+                return false;
+            }
+            
+            // Step 5: Initialize review answers state
+            reviewAnswersState = reviewQuestions.map(qItem => ({
+                selectedAnswer: null,
+                submitted: false,
+                isCorrect: false,
+                questionId: qItem.question.id
+            }));
+            
+            // Step 6: Load saved review progress from cloud
+            const savedProgress = await loadReviewProgressFromCloud();
+            if (savedProgress && savedProgress.answersState) {
+                for (let i = 0; i < reviewAnswersState.length; i++) {
+                    const saved = savedProgress.answersState.find(s => s.questionId === reviewAnswersState[i].questionId);
+                    if (saved && saved.submitted) {
+                        reviewAnswersState[i] = { ...saved };
+                    }
+                }
+                if (savedProgress.currentIndex && savedProgress.currentIndex < reviewQuestions.length) {
+                    currentIndex = savedProgress.currentIndex;
+                }
+                if (savedProgress.tempSelectedAnswer) {
+                    tempSelectedAnswer = savedProgress.tempSelectedAnswer;
+                }
+                if (savedProgress.showFeedback) {
+                    showFeedback = savedProgress.showFeedback;
+                }
+                console.log('Restored review progress from cloud');
+            }
+            
+            currentIndex = currentIndex < reviewQuestions.length ? currentIndex : 0;
+            
+            await loadAllFavoriteQuestionIds();
+            await loadFavoriteLists();
+            
+            updateProgressDisplay();
+            renderNavStrip();
+            loading = false;
+            renderQuestion();
+            
+            setTimeout(() => scrollNavigatorToCurrent(), 150);
+            setTimeout(() => scrollToQuestion(), 200);
+            
+            return true;
+            
+        } catch(e) {
+            console.error('Error loading incorrect questions:', e);
+            document.getElementById('dynamicContent').innerHTML = `
+                <div class="loading-container" style="color:red;">
+                    <p>❌ Failed to load review questions: ${e.message}</p>
+                    <button onclick="location.reload()" style="margin-top:20px; padding:10px 20px; background:#e67e22; color:white; border:none; border-radius:8px;">Retry</button>
+                </div>
+            `;
+            loading = false;
+            return false;
+        }
+    }
+    
+    function updateProgressDisplay() {
+        const answered = reviewAnswersState.filter(s => s.submitted).length;
+        const correct = reviewAnswersState.filter(s => s.submitted && s.isCorrect).length;
+        document.getElementById('progressDisplay').innerHTML = `📊 ${correct} / ${answered} correct | ❌ ${reviewAnswersState.length - answered} remaining`;
+        document.getElementById('scoreDisplay').innerHTML = `⭐ ${correct} / ${reviewAnswersState.length}`;
+    }
+    
+    function scrollNavigatorToCurrent() {
+        setTimeout(() => {
+            const currentBtn = document.querySelector(`.nav-q-btn.current`);
+            if (currentBtn) {
+                currentBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+        }, 150);
+    }
+    
+    function scrollStrip(dir) { 
+        const strip = document.getElementById('questionStrip'); 
+        if (strip) strip.scrollBy({ left: dir === 'left' ? -200 : 200, behavior: 'smooth' }); 
+    }
+    
+    function renderNavStrip() {
+        const strip = document.getElementById('questionStrip');
+        if (!strip || !reviewQuestions.length) return;
+        let html = '';
+        for (let i = 0; i < reviewQuestions.length; i++) {
+            const s = reviewAnswersState[i];
+            let cls = 'unanswered';
+            if (s && s.submitted) cls = s.isCorrect ? 'correct' : 'incorrect';
+            if (i === currentIndex) cls += ' current';
+            const qNum = reviewQuestions[i].originalIndex + 1;
+            html += `<div class="nav-q-btn ${cls}" data-idx="${i}" title="Original Question ${qNum}">${qNum}</div>`;
+        }
+        strip.innerHTML = html;
+        document.querySelectorAll('.nav-q-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = parseInt(btn.dataset.idx);
+                if (!isNaN(idx) && idx >= 0 && idx < reviewQuestions.length) {
+                    currentIndex = idx;
+                    tempSelectedAnswer = null;
+                    showFeedback = false;
+                    renderQuestion();
+                    renderNavStrip();
+                    updateProgressDisplay();
+                    scrollNavigatorToCurrent();
+                    scrollToQuestion();
+                    debouncedSave();
+                }
+            });
+        });
+    }
+    
+    function scrollToQuestion() {
+        setTimeout(() => {
+            const qText = document.querySelector('.question-text');
+            if (qText) {
+                const stickyH = document.getElementById('stickyStrip')?.offsetHeight || 60;
+                window.scrollTo({ top: qText.getBoundingClientRect().top + window.pageYOffset - stickyH - 15, behavior: 'smooth' });
+            }
+        }, 100);
+    }
+    
+    function scrollToOptions() {
+        setTimeout(() => {
+            const optionsList = document.querySelector('.options-list');
+            if (optionsList) {
+                const stickyH = document.getElementById('stickyStrip')?.offsetHeight || 60;
+                window.scrollTo({ top: optionsList.getBoundingClientRect().top + window.pageYOffset - stickyH - 10, behavior: 'smooth' });
+            }
+        }, 100);
+    }
+
+    // ============================================
+    // ANSWER FLOW
+    // ============================================
+    let isSubmitting = false;
+    
+    async function submitAnswer(answer) {
+        if (!reviewQuestions.length) return null;
+        if (isSubmitting) {
+            alert('Please wait, checking your answer...');
+            return null;
+        }
+        
+        const q = reviewQuestions[currentIndex].question;
+        isSubmitting = true;
+        
+        const submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) {
+            submitBtn.textContent = '⏳ Checking...';
+            submitBtn.disabled = true;
+        }
+        
+        try {
+            const res = await fetch(API_CHECK_ANSWER, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question_id: q.id, answer: answer }) });
+            const result = await res.json();
+            if (result) {
+                const isCor = result.correct;
+                reviewAnswersState[currentIndex].submitted = true;
+                reviewAnswersState[currentIndex].isCorrect = isCor;
+                reviewAnswersState[currentIndex].selectedAnswer = answer;
+                tempSelectedAnswer = answer;
+                showFeedback = true;
+                debouncedSave();
+                renderNavStrip();
+                renderQuestion();
+                updateProgressDisplay();
+                scrollNavigatorToCurrent();
+                setTimeout(() => scrollToOptions(), 150);
+                return result;
+            }
+            return null;
+        } catch(e) {
+            console.error('Submit error:', e);
+            alert('Network error. Please try again.');
+            return null;
+        } finally {
+            isSubmitting = false;
+            if (submitBtn) {
+                submitBtn.textContent = '✅ Submit Answer';
+                submitBtn.disabled = false;
+            }
+        }
+    }
+
+    async function handleSubmit() {
+        if (!reviewQuestions.length) return;
+        if (!tempSelectedAnswer) { alert('Select an answer first'); return; }
+        await submitAnswer(tempSelectedAnswer);
+    }
+
+    function handleNext() {
+        if (!reviewQuestions.length) return;
+        if (currentIndex < reviewQuestions.length - 1) {
+            currentIndex++;
+            tempSelectedAnswer = null;
+            showFeedback = false;
+            renderNavStrip();
+            renderQuestion();
+            updateProgressDisplay();
+            scrollNavigatorToCurrent();
+            scrollToQuestion();
+            debouncedSave();
+        } else {
+            const allAnswered = reviewAnswersState.every(s => s.submitted);
+            if (allAnswered) {
+                showCompletionScreen();
+            } else {
+                const firstUnanswered = reviewAnswersState.findIndex(s => !s.submitted);
+                if (firstUnanswered !== -1) {
+                    currentIndex = firstUnanswered;
+                    tempSelectedAnswer = null;
+                    showFeedback = false;
+                    renderNavStrip();
+                    renderQuestion();
+                    updateProgressDisplay();
+                    scrollNavigatorToCurrent();
+                    scrollToQuestion();
+                    debouncedSave();
+                }
+            }
+        }
+    }
+
+    function selectAnswer(letter) {
+        if (!reviewQuestions.length) return;
+        tempSelectedAnswer = letter;
+        renderQuestion();
+        setTimeout(() => scrollToOptions(), 100);
+    }
+
+    async function startOver() {
+        reviewAnswersState = reviewAnswersState.map(s => ({
+            selectedAnswer: null,
+            submitted: false,
+            isCorrect: false,
+            questionId: s.questionId
+        }));
+        currentIndex = 0;
+        tempSelectedAnswer = null;
+        showFeedback = false;
+        await saveReviewProgressToCloud();
+        renderNavStrip();
+        renderQuestion();
+        updateProgressDisplay();
+        scrollNavigatorToCurrent();
+        scrollToQuestion();
+    }
+
+    function renderQuestion() {
+        const container = document.getElementById('dynamicContent');
+        if (!reviewQuestions.length) {
+            container.innerHTML = '<div class="loading-container">No questions to review.</div>';
+            return;
+        }
+        
+        const qItem = reviewQuestions[currentIndex];
+        const q = qItem.question;
+        const correctAnswer = q.correct_answer;
+        const isFavorited = favoritedQuestionIds.has(q.id);
+        const starIcon = isFavorited ? '⭐' : '✩';
+        
+        let optsHtml = '';
+        const letters = ['A', 'B', 'C', 'D', 'E'];
+        for (let l of letters) {
+            const txt = q.options[l];
+            if (!txt) continue;
+            let cls = '';
+            if (showFeedback && tempSelectedAnswer) {
+                if (l === correctAnswer) cls = 'submitted-correct';
+                else if (l === tempSelectedAnswer && l !== correctAnswer) cls = 'submitted-wrong';
+            } else if (tempSelectedAnswer === l && !showFeedback) cls = 'selected-pending';
+            optsHtml += `<div class="option-item ${cls}" data-letter="${l}"><div class="option-prefix">${l}</div><div class="option-text">${escapeHtml(txt)}</div></div>`;
+        }
+        
+        let fbHtml = '';
+        let geminiButtonHtml = '';
+        let deepseekButtonHtml = '';
+        let chatgptButtonHtml = '';
+        
+        if (showFeedback && tempSelectedAnswer) {
+            const isCor = (tempSelectedAnswer === correctAnswer);
+            const fbCls = isCor ? 'feedback-correct' : 'feedback-wrong';
+            geminiButtonHtml = `<button id="geminiBtn" class="ai-btn gemini-btn">🤖 Ask Gemini</button>`;
+            deepseekButtonHtml = `<button id="deepseekBtn" class="ai-btn deepseek-btn">🧠 Ask DeepSeek</button>`;
+            chatgptButtonHtml = `<button id="chatgptBtn" class="ai-btn chatgpt-btn">💬 Ask ChatGPT</button>`;
+            fbHtml = `<div class="feedback-card ${fbCls}">
+                <strong>${isCor ? '✓ Correct' : '✗ Incorrect'}</strong>
+                <div class="explanation">
+                    <strong>Correct answer: ${correctAnswer}</strong><br>${escapeHtml(q.explanation)}
+                </div>
+                <div class="ai-buttons">
+                    ${geminiButtonHtml}
+                    ${deepseekButtonHtml}
+                    ${chatgptButtonHtml}
+                </div>
+            </div>`;
+        } else {
+            fbHtml = `<div class="feedback-card feedback-neutral">📌 Select an answer, then click Submit to check your answer</div>`;
+        }
+        
+        let mainButton = '';
+        if (showFeedback) {
+            mainButton = `<button class="btn-main" id="nextBtn">➡️ Next Question</button>`;
+        } else {
+            mainButton = `<button class="btn-main" id="submitBtn">✅ Submit Answer</button>`;
+        }
+        
+        const correctCount = reviewAnswersState.filter(s => s.submitted && s.isCorrect).length;
+        
+        const html = `<div class="question-body">
+            <div class="question-text" id="questionText">
+                <div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0;">
+                    <span style="background: #e67e22; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem;">Review Progress: ${correctCount}/${reviewQuestions.length} correct</span>
+                    <span style="margin-left: 10px; background: #f0f2f5; color: #1e4a76; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem;">Original Question #${qItem.originalIndex + 1}</span>
+                </div>
+                ${escapeHtml(q.text)}
+                <div class="question-actions">
+                    <button id="favoriteStarBtn" class="action-icon favorite-icon" title="${isFavorited ? 'Remove from favorites' : 'Add to favorites'}">${starIcon}</button>
+                    <button id="reportBtn" class="action-icon report-icon" title="Report this question">⛔</button>
+                </div>
+            </div>
+            <div class="options-list">${optsHtml}</div>
+            <div class="action-area">
+                <div class="action-row">
+                    ${mainButton}
+                    <button class="btn-secondary" id="startOverBtn">🔄 Start Over</button>
+                </div>
+            </div>
+            ${fbHtml}
+            <hr>
+            <div class="bottom-nav">
+                <a href="mock.html?book_id=${reviewBookId}&chapter_key=${reviewChapterKey}">← Back to ${reviewChapterName}</a>
+                <a href="index.html">📚 Exam Menu</a>
+            </div>
+        </div>`;
+        
+        container.innerHTML = html;
+        
+        document.querySelectorAll('.option-item').forEach(div => {
+            div.addEventListener('click', () => selectAnswer(div.dataset.letter));
+        });
+        if (!showFeedback) document.getElementById('submitBtn')?.addEventListener('click', handleSubmit);
+        else document.getElementById('nextBtn')?.addEventListener('click', handleNext);
+        document.getElementById('startOverBtn')?.addEventListener('click', startOver);
+        document.getElementById('favoriteStarBtn')?.addEventListener('click', () => toggleFavorite(q.id));
+        document.getElementById('reportBtn')?.addEventListener('click', reportQuestion);
+        if (geminiButtonHtml) document.getElementById('geminiBtn')?.addEventListener('click', askGemini);
+        if (deepseekButtonHtml) document.getElementById('deepseekBtn')?.addEventListener('click', askDeepSeek);
+        if (chatgptButtonHtml) document.getElementById('chatgptBtn')?.addEventListener('click', askChatGPT);
+    }
+
+    function showCompletionScreen() {
+        const correct = reviewAnswersState.filter(s => s.submitted && s.isCorrect).length;
+        const total = reviewQuestions.length;
+        const percent = Math.round(correct / total * 100);
+        const container = document.getElementById('dynamicContent');
+        container.innerHTML = `<div style="text-align:center;padding:2rem;">
+            <div style="font-size:1.2rem;color:#e67e22;">📚 Review Completed!</div>
+            <div style="font-size:2rem;font-weight:800;">${correct}/${total} correct</div>
+            <div style="font-size:1.2rem;margin:8px;">${percent}%</div>
+            ${correct === total ? '<div style="background:#d1fae5;padding:15px;border-radius:12px;margin:15px 0;">🎉 You mastered all the incorrect questions!</div>' : '<div style="background:#fee2e2;padding:15px;border-radius:12px;margin:15px 0;">📝 Keep practicing! Review again if needed.</div>'}
+            <button id="restartReviewBtn" class="btn-main">🔄 Review Again</button>
+            <a href="mock.html?book_id=${reviewBookId}&chapter_key=${reviewChapterKey}" class="btn-secondary" style="display: inline-block; text-decoration: none;">← Back to ${reviewChapterName}</a>
+            <a href="index.html" class="btn-secondary" style="display: inline-block; text-decoration: none;">📚 Exam Menu</a>
+        </div>`;
+        document.getElementById('restartReviewBtn')?.addEventListener('click', startOver);
+    }
+
+    // ============================================
+    // LOGIN CHECK
+    // ============================================
+    async function checkUserSession() {
+        const token = localStorage.getItem('session_token');
+        if (!token) { 
+            localStorage.setItem('redirectAfterLogin', window.location.pathname);
+            window.location.href = '../../login.html';
+            return false;
+        }
+        try {
+            const response = await fetch(API_AUTH, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'verify', token: token })
+            });
+            const result = await response.json();
+            if (result.success) {
+                currentUserId = result.user_id;
+                const username = localStorage.getItem('username') || 'User';
+                document.getElementById('userDisplay').textContent = `👤 ${username}`;
+                return true;
+            } else {
+                localStorage.clear();
+                window.location.href = '../../login.html';
+                return false;
+            }
+        } catch(e) {
+            window.location.href = '../../login.html';
+            return false;
+        }
+    }
+
+    function escapeHtml(s) { 
+        if (!s) return ''; 
+        return s.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); 
+    }
+    
+    function initScroll() { 
+        document.getElementById('scrollLeftBtn')?.addEventListener('click', () => scrollStrip('left')); 
+        document.getElementById('scrollRightBtn')?.addEventListener('click', () => scrollStrip('right')); 
+    }
+    
+    async function init() {
+        const configLoaded = await loadChapterConfig();
+        if (!configLoaded) return;
+        
+        const loggedIn = await checkUserSession();
+        if (loggedIn) {
+            await loadIncorrectQuestions();
+            initScroll();
+        }
+    }
+    
+    init();
+</script>
+</p>
+</body>
+</html>

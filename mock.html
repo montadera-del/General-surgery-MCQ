@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>Mock Exam | MasterPass</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', system-ui, sans-serif;
+            background: linear-gradient(145deg, #eef2f7 0%, #d4dce6 100%);
+            min-height: 100vh;
+            padding: max(12px, 1.5vh) max(16px, 2vw);
+        }
+        .quiz-card {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: clamp(24px, 4vw, 36px);
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.25);
+            overflow: visible;
+        }
+        .quiz-header {
+            padding: clamp(12px, 2vh, 20px) clamp(16px, 3vw, 28px);
+            background: #2c5f2d;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .title-section h1 { font-size: clamp(1rem, 4vw, 1.3rem); font-weight: 600; }
+        .title-section p { font-size: clamp(0.65rem, 2.5vw, 0.75rem); opacity: 0.8; margin-top: 4px; }
+        .home-link, .book-link {
+            background: rgba(255,255,255,0.15);
+            padding: 6px 15px;
+            border-radius: 30px;
+            text-decoration: none;
+            color: white;
+            font-size: 0.8rem;
+            transition: background 0.2s;
+        }
+        .home-link:hover, .book-link:hover { background: rgba(255,255,255,0.25); }
+        .stats-group {
+            display: flex;
+            gap: 12px;
+            background: rgba(255,255,255,0.12);
+            padding: 8px 16px;
+            border-radius: 60px;
+        }
+        .stat-item { font-size: clamp(0.7rem, 2.5vw, 0.85rem); font-weight: 50000; }
+        .nav-header-section {
+            padding: clamp(8px, 1.5vh, 14px) clamp(12px, 3vw, 24px);
+            background: #f8fafd;
+            border-bottom: 1px solid #e2edf2;
+        }
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .nav-title { font-size: clamp(0.7rem, 2.8vw, 0.8rem); font-weight: 600; color: #1e4a76; }
+        .legend {
+            display: flex;
+            gap: clamp(10px, 2.5vw, 20px);
+            font-size: clamp(0.6rem, 2.2vw, 0.7rem);
+        }
+        .legend span { display: inline-flex; align-items: center; gap: 5px; }
+        .legend-color { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+        .sticky-strip-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #f8fafd;
+            border-bottom: 1px solid #e2edf2;
+            padding: 8px clamp(12px, 3vw, 24px);
+        }
+        .question-strip-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .scroll-btn {
+            background: #e2e8f0;
+            border: none;
+            width: 32px;
+            height: 44px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #1e4a76;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            touch-action: manipulation;
+        }
+        .scroll-btn:hover { background: #cbd5e1; }
+        .scroll-btn:active { transform: scale(0.95); }
+        .question-strip {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 8px;
+            padding: 6px 4px 8px 4px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            flex: 1;
+            scrollbar-width: thin;
+        }
+        .question-strip::-webkit-scrollbar { height: 4px; }
+        .question-strip::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
+        .question-strip::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        .nav-q-btn {
+            flex: 0 0 auto;
+            width: clamp(40px, 8vw, 52px);
+            height: clamp(40px, 8vw, 52px);
+            border-radius: 16px;
+            background: #f1f5f9;
+            border: 1.5px solid #e2e8f0;
+            font-weight: 700;
+            font-size: clamp(0.85rem, 3vw, 1rem);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            color: #1e293b;
+        }
+        .nav-q-btn.unanswered { background: #f1f5f9; border-left: 5px solid #94a3b8; }
+        .nav-q-btn.correct { background: #d1fae5; border-left: 5px solid #10b981; color: #065f46; }
+        .nav-q-btn.incorrect { background: #fee2e2; border-left: 5px solid #ef4444; color: #991b1b; }
+        .nav-q-btn.current { background: #e0f2fe; border: 2px solid #2c5f2d; box-shadow: 0 0 0 2px #a0c4a0; font-weight: 800; }
+        .question-body {
+            padding: clamp(20px, 4vh, 32px) clamp(20px, 5vw, 40px);
+        }
+        .question-text {
+            font-size: clamp(1rem, 4.5vw, 1.35rem);
+            font-weight: 500;
+            line-height: 1.5;
+            color: #0a2540;
+            background: #fafcff;
+            padding: clamp(14px, 2vh, 20px);
+            border-radius: 24px;
+            border-left: 5px solid #2c5f2d;
+            scroll-margin-top: 90px;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 24px;
+        }
+        .question-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .action-icon {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 30px;
+            transition: all 0.2s;
+            line-height: 1;
+        }
+        .action-icon:hover {
+            transform: scale(1.1);
+            background: rgba(0,0,0,0.05);
+        }
+        .report-icon { color: #dc2626; }
+        .favorite-icon { color: #f0b429; }
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: clamp(12px, 2vh, 18px);
+            margin-bottom: clamp(24px, 4vh, 32px);
+            scroll-margin-top: 90px;
+        }
+        .option-item {
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 20px;
+            padding: clamp(14px, 2.5vh, 20px) clamp(16px, 3vw, 24px);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: clamp(12px, 2.5vw, 18px);
+        }
+        .option-item:hover { background: #f9fcff; border-color: #bdd3e8; transform: translateX(4px); }
+        .option-item.submitted-correct { background: #e3f7ec; border-color: #2b8c5e; }
+        .option-item.submitted-wrong { background: #fee9e6; border-color: #d9534f; }
+        .option-item.selected-pending { background: #fff8e7; border-color: #f0b429; box-shadow: 0 0 0 1px #f0b429; }
+        .option-prefix {
+            font-weight: 700;
+            font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+            background: #f0f4f9;
+            width: clamp(36px, 7vw, 44px);
+            height: clamp(36px, 7vw, 44px);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 40px;
+            color: #1e466e;
+            flex-shrink: 0;
+        }
+        .option-text {
+            font-size: clamp(0.85rem, 3.2vw, 1rem);
+            line-height: 1.45;
+            color: #1e2f3e;
+            flex: 1;
+        }
+        .feedback-card {
+            border-radius: 20px;
+            padding: clamp(14px, 2.5vh, 20px) clamp(16px, 3vw, 24px);
+            margin: 16px 0 20px 0;
+            border-left: 6px solid;
+            font-size: clamp(0.85rem, 3vw, 0.95rem);
+            scroll-margin-top: 90px;
+        }
+        .feedback-correct { background: #eef7f1; border-left-color: #2b8c5e; }
+        .feedback-wrong { background: #fef4f2; border-left-color: #d9534f; }
+        .feedback-neutral { background: #f0f6fa; border-left-color: #2c5f2d; }
+        .explanation { margin-top: 10px; line-height: 1.5; }
+        .action-area {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 20px 0 16px;
+        }
+        .action-row {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .btn-main, .btn-review {
+            width: 100%;
+            border: none;
+            padding: clamp(14px, 2.5vh, 18px);
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: clamp(0.9rem, 3.5vw, 1.05rem);
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .btn-main {
+            background: #2c5f2d;
+            color: white;
+        }
+        .btn-main.next-mode {
+            background: #2b8c5e;
+        }
+        .btn-review {
+            background: #e67e22;
+            color: white;
+        }
+        .btn-review:hover {
+            background: #f39c12;
+            transform: scale(1.02);
+        }
+        .btn-review:active {
+            transform: scale(0.98);
+        }
+        @media (min-width: 768px) {
+            .action-row {
+                flex-direction: row;
+                justify-content: flex-start;
+                align-items: center;
+                gap: 20px;
+            }
+            .btn-main, .btn-review {
+                width: auto;
+                min-width: 200px;
+            }
+        }
+        .bottom-nav {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .bottom-nav a {
+            background: #f0f2f5;
+            color: #4a627a;
+            padding: 10px 12px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            text-align: center;
+            flex: 1;
+        }
+        .bottom-nav a:last-child {
+            background: #2c5f2d;
+            color: white;
+        }
+        @media (min-width: 768px) {
+            .bottom-nav a {
+                padding: 10px 20px;
+                font-size: 0.85rem;
+                flex: 0 1 auto;
+            }
+        }
+        hr { margin: 24px 0 0; border: none; border-top: 1px solid #e9edf2; }
+        .footer-note {
+            background: #fef9e6;
+            padding: clamp(10px, 2vh, 16px);
+            font-size: clamp(0.65rem, 2.5vw, 0.75rem);
+            color: #856404;
+            text-align: center;
+            border-top: 1px solid #ffeeba;
+        }
+        .loading-container { text-align: center; padding: 60px 20px; color: #2c5f2d; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2c5f2d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .sync-status {
+            font-size: 0.7rem;
+            margin-left: 10px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.2);
+        }
+        .sync-status.saved { background: #10b981; }
+        .sync-status.saving { background: #e67e22; }
+        .user-display {
+            font-size: 0.8rem;
+            background: rgba(255,255,255,0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        @media (min-width: 1024px) {
+            .options-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        }
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .options-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        }
+        @media (max-width: 480px) { .scroll-btn { width: 28px; font-size: 1rem; } }
+        .option-item, .nav-q-btn, button { touch-action: manipulation; cursor: pointer; }
+        html { scroll-behavior: smooth; }
+
+        .ai-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .ai-btn {
+            color: white;
+            border: none;
+            border-radius: 60px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .gemini-btn { background: #4285f4; }
+        .gemini-btn:hover { background: #3367d6; transform: scale(1.02); }
+        .deepseek-btn { background: #0e9f6e; }
+        .deepseek-btn:hover { background: #0b8156; transform: scale(1.02); }
+        .chatgpt-btn { background: #10a37f; }
+        .chatgpt-btn:hover { background: #0e8b6a; transform: scale(1.02); }
+    </style>
+</head>
+<body>
+<div class="quiz-card" id="quizRoot">
+<div class="quiz-header" id="quizHeader">
+<div class="title-section">
+<h1 id="mockTitle">📝 Mock Exam</h1>
+<p>MasterPass | <span id="questionCount">0</span> Questions</p>
+</div>
+<div style="display: flex; gap: 10px; align-items: center;"><span id="syncStatus" class="sync-status">☁️ Synced</span> <span id="userDisplay" class="user-display">👤 Loading...</span> <a href="index.html" class="book-link">📚 Book Home</a> <a href="../../index.html" class="home-link">🏠 Library</a></div>
+<div class="stats-group">
+<div class="stat-item" id="scoreDisplay">⭐ 0 / 0</div>
+<div class="stat-item" id="qCounterDisplay">Q1</div>
+</div>
+</div>
+<div class="nav-header-section">
+<div class="nav-header">
+<div class="legend">
+<div class="legend-color" style="background: #f1f5f9; border-left: 3px solid #94a3b8;"></div>
+<span>Unanswered</span>
+<div class="legend-color" style="background: #d1fae5; border-left: 3px solid #10b981;"></div>
+<span>Correct</span>
+<div class="legend-color" style="background: #fee2e2; border-left: 3px solid #ef4444;"></div>
+<span>Incorrect</span>
+<div class="legend-color" style="background: #e0f2fe; border: 2px solid #2c5f2d;"></div>
+<span>Current</span></div>
+</div>
+</div>
+<div class="sticky-strip-wrapper" id="stickyStrip">
+<div class="question-strip-wrapper"><button class="scroll-btn" id="scrollLeftBtn">◀</button>
+<div id="questionStrip" class="question-strip"></div>
+<button class="scroll-btn" id="scrollRightBtn">▶</button></div>
+</div>
+<div id="dynamicContent">
+<div class="loading-container">
+<div class="loader"></div>
+<p>Loading questions...</p>
+</div>
+</div>
+<div class="footer-note" style="text-align: left;"></div>
+</div>
+<p>
+<script>
+    // ============================================
+    // API PATHS
+    // ============================================
+    const API_GET_QUESTIONS = '../../api/api_get_questions.php?limit=50000&random=0';
+    const API_CHECK_ANSWER = '../../api/api_check_answer.php';
+    const API_AUTH = '../../api/auth.php';
+    const API_SYNC = '../../api/sync_progress.php';
+    const API_FAVORITE_LISTS = '../../api/favorite_lists.php';
+    const API_REPORT_QUESTION = '../../api/report_question.php';
+    const API_CHAPTER_CONFIG = '../../api/get_chapter_config.php';
+
+    // ============================================
+    // GET BOOK_ID AND CHAPTER_KEY FROM URL
+    // ============================================
+    const urlParams = new URLSearchParams(window.location.search);
+    const BOOK_ID = parseInt(urlParams.get('book_id')) || 0;
+    const CHAPTER_KEY = urlParams.get('chapter_key');
+    
+    if (!BOOK_ID || !CHAPTER_KEY) {
+        alert('Invalid exam link. Redirecting to library.');
+        window.location.href = 'index.html';
+    }
+    
+    // ============================================
+    // GLOBAL VARIABLES
+    // ============================================
+    let questions = [];
+    let answersState = [];
+    let currentIndex = 0;
+    let loading = true;
+    let currentUserId = null;
+    let syncTimeout = null;
+    let tempSelectedAnswer = null;
+    let showFeedback = false;
+    
+    let favoritedQuestionIds = new Set();
+    let userFavoriteLists = [];
+    let currentQuestionLists = new Set();
+    
+    let chapterConfig = null;
+    let bookColor = '#2c5f2d';
+    
+    // Queue for pending saves (avoid rate limiting)
+    let pendingSave = false;
+
+    // ============================================
+    // LOAD CHAPTER CONFIGURATION (WITH BOOK COLOR)
+    // ============================================
+    async function loadChapterConfig() {
+        try {
+            const response = await fetch(`${API_CHAPTER_CONFIG}?book_id=${BOOK_ID}&chapter_key=${CHAPTER_KEY}`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const result = await response.json();
+            if (result.success) {
+                chapterConfig = result.config;
+                bookColor = chapterConfig.book_color || '#2c5f2d';
+                
+                document.getElementById('mockTitle').innerHTML = `${chapterConfig.icon || '📝'} ${chapterConfig.chapter_name}`;
+                document.title = `${chapterConfig.chapter_name} | MasterPass`;
+                const totalQ = chapterConfig.end_question_idx - chapterConfig.start_question_idx;
+                document.getElementById('questionCount').innerText = totalQ;
+                
+                // Apply color to header immediately
+                const quizHeader = document.getElementById('quizHeader');
+                if (quizHeader) quizHeader.style.background = bookColor;
+                
+                console.log('Chapter config loaded:', chapterConfig);
+                return true;
+            } else {
+                throw new Error(result.error);
+            }
+        } catch(e) {
+            console.error('Failed to load chapter config:', e);
+            document.getElementById('dynamicContent').innerHTML = `
+                <div class="loading-container" style="color:red;">
+                    <p>❌ Failed to load chapter configuration.<br>${e.message}</p>
+                    <button onclick="window.location.href='chapters.html?book_id=${BOOK_ID}'" style="margin-top:20px; padding:10px 20px; background:#2c5f2d; color:white; border:none; border-radius:8px;">Back to Chapters</button>
+                </div>
+            `;
+            return false;
+        }
+    }
+
+    // ============================================
+    // CLOUD SYNC
+    // ============================================
+    function updateSyncStatus(status, isSaving = false) {
+        const statusEl = document.getElementById('syncStatus');
+        if (!statusEl) return;
+        if (isSaving) {
+            statusEl.textContent = '💾 Saving...';
+            statusEl.className = 'sync-status saving';
+        } else {
+            statusEl.textContent = '☁️ Synced';
+            statusEl.className = 'sync-status saved';
+        }
+        // Reset after 2 seconds
+        setTimeout(() => {
+            if (statusEl.className === 'sync-status saved') {
+                statusEl.textContent = '☁️ Synced';
+            }
+        }, 2000);
+    }
+
+    async function saveToCloud() {
+        if (!currentUserId) return;
+        if (pendingSave) return; // Skip if already saving
+        
+        pendingSave = true;
+        updateSyncStatus('', true);
+        try {
+            const token = localStorage.getItem('session_token');
+            const incorrectIndices = [];
+            for (let i = 0; i < answersState.length; i++) {
+                if (answersState[i].submitted && !answersState[i].isCorrect) {
+                    incorrectIndices.push(i);
+                }
+            }
+            const quizState = { answersState: answersState };
+            await fetch(API_SYNC, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'save',
+                    token: token,
+                    book_id: BOOK_ID,
+                    chapter_key: CHAPTER_KEY,
+                    incorrect_questions: JSON.stringify(incorrectIndices),
+                    quiz_state: JSON.stringify(quizState)
+                })
+            });
+            updateSyncStatus('saved', false);
+        } catch(e) {
+            console.error('Save error:', e);
+            updateSyncStatus('error', false);
+        } finally {
+            pendingSave = false;
+        }
+    }
+
+    async function loadProgressFromCloud() {
+        if (!currentUserId) return null;
+        try {
+            const token = localStorage.getItem('session_token');
+            const response = await fetch(API_SYNC, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    action: 'load', 
+                    token: token, 
+                    book_id: BOOK_ID, 
+                    chapter_key: CHAPTER_KEY
+                })
+            });
+            const result = await response.json();
+            if (result.success) {
+                console.log('Cloud progress loaded, answers:', result.quiz_state?.answersState?.length || 0);
+                return { 
+                    incorrectQuestions: result.incorrect_questions || [], 
+                    quizState: result.quiz_state || {} 
+                };
+            }
+            return null;
+        } catch(e) { 
+            console.error('Load from cloud error:', e);
+            return null; 
+        }
+    }
+
+    function debouncedSave() {
+        if (syncTimeout) clearTimeout(syncTimeout);
+        syncTimeout = setTimeout(() => saveToCloud(), 3000); // Save after 3 seconds of inactivity
+    }
+
+    // Force save before leaving page
+    window.addEventListener('beforeunload', () => {
+        if (syncTimeout) {
+            clearTimeout(syncTimeout);
+            saveToCloud();
+        }
+    });
+
+    // ============================================
+    // FAVORITE FUNCTIONS
+    // ============================================
+    async function loadAllFavoriteQuestionIds() {
+        const token = localStorage.getItem('session_token');
+        if (!token) return;
+        try {
+            const response = await fetch(`${API_FAVORITE_LISTS}?action=get_all_favorites&token=${token}`);
+            const result = await response.json();
+            if (result.success && Array.isArray(result.question_ids)) {
+                favoritedQuestionIds.clear();
+                result.question_ids.forEach(id => favoritedQuestionIds.add(id));
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    async function loadCurrentQuestionLists(questionId) {
+        const token = localStorage.getItem('session_token');
+        if (!token) return;
+        try {
+            const response = await fetch(`${API_FAVORITE_LISTS}?action=get_question_lists&token=${token}&question_id=${questionId}`);
+            const result = await response.json();
+            if (result.success && Array.isArray(result.list_ids)) {
+                currentQuestionLists.clear();
+                result.list_ids.forEach(id => currentQuestionLists.add(id));
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    async function addToFavoriteListAndUpdate(questionId, listId) {
+        const token = localStorage.getItem('session_token');
+        const response = await fetch(API_FAVORITE_LISTS, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'add_to_list',
+                token: token,
+                list_id: listId,
+                question_id: questionId,
+                book_id: BOOK_ID
+            })
+        });
+        const result = await response.json();
+        if (result.success) {
+            favoritedQuestionIds.add(questionId);
+            currentQuestionLists.add(listId);
+            renderQuestion();
+            const modal = document.getElementById('favoriteModal');
+            if (modal && modal.style.display === 'flex') await refreshListDisplay(questionId);
+            alert('✅ Question added to favorites!');
+        } else {
+            alert('Error: ' + (result.error || 'Could not add to list'));
+        }
+    }
+
+    async function removeFromFavoriteList(questionId, listId) {
+        const token = localStorage.getItem('session_token');
+        const response = await fetch(API_FAVORITE_LISTS, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'remove_from_list',
+                token: token,
+                list_id: listId,
+                question_id: questionId
+            })
+        });
+        const result = await response.json();
+        if (result.success) {
+            await loadAllFavoriteQuestionIds();
+            currentQuestionLists.delete(listId);
+            renderQuestion();
+            const modal = document.getElementById('favoriteModal');
+            if (modal && modal.style.display === 'flex') await refreshListDisplay(questionId);
+            alert('✅ Question removed from list!');
+        } else {
+            alert('Error: ' + (result.error || 'Could not remove'));
+        }
+    }
+
+    async function loadFavoriteLists() {
+        const token = localStorage.getItem('session_token');
+        if (!token) return;
+        try {
+            const response = await fetch(`${API_FAVORITE_LISTS}?action=get_lists&token=${token}`);
+            const result = await response.json();
+            if (result.success) userFavoriteLists = result.lists;
+        } catch(e) { console.error(e); }
+    }
+
+    async function createDefaultList() {
+        const token = localStorage.getItem('session_token');
+        if (!token) return;
+        try {
+            await fetch(API_FAVORITE_LISTS, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'create_list',
+                    token: token,
+                    list_name: 'My Favorites',
+                    icon: '⭐',
+                    color: '#f0b429'
+                })
+            });
+        } catch(e) { console.error(e); }
+    }
+
+    async function showFavoriteMenu(questionId) {
+        await loadCurrentQuestionLists(questionId);
+        if (userFavoriteLists.length === 0) {
+            await loadFavoriteLists();
+        }
+        if (userFavoriteLists.length === 0) {
+            await createDefaultList();
+            await loadFavoriteLists();
+        }
+        
+        let modal = document.getElementById('favoriteModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'favoriteModal';
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.5); z-index: 1001;
+                display: flex; justify-content: center; align-items: center;
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        let listHtml = '<div style="background: white; border-radius: 20px; padding: 25px; max-width: 400px; width: 90%;">';
+        listHtml += '<h3 style="margin-bottom: 15px;">⭐ Add to Favorite List</h3>';
+        listHtml += '<div id="existingLists" style="max-height: 300px; overflow-y: auto;"></div>';
+        listHtml += '<hr style="margin: 15px 0;">';
+        listHtml += '<input type="text" id="newListName" placeholder="New list name..." style="width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ccc; margin-bottom: 10px;">';
+        listHtml += '<button id="createNewListBtn" style="width: 100%; padding: 10px; background: #2c5f2d; color: white; border: none; border-radius: 10px;">+ Create New List</button>';
+        listHtml += '<a href="https://relaxreading.rf.gd/favorites.html" class="manage-lists-link" style="display: block; width: 100%; margin-top: 10px; padding: 10px; background: #f0f2f5; color: #4a627a; text-align: center; text-decoration: none; border-radius: 10px;">📋 My Favorite Lists</a>';
+        listHtml += '<button id="closeModalBtn" style="width: 100%; margin-top: 10px; padding: 10px; background: #ccc; border: none; border-radius: 10px;">Cancel</button>';
+        listHtml += '</div>';
+        modal.innerHTML = listHtml;
+        modal.style.display = 'flex';
+        
+        await refreshListDisplay(questionId);
+        
+        document.getElementById('createNewListBtn').onclick = async () => {
+            const newName = document.getElementById('newListName').value.trim();
+            if (newName) {
+                await createNewList(newName, questionId);
+                modal.style.display = 'none';
+            } else alert('Please enter a list name');
+        };
+        document.getElementById('closeModalBtn').onclick = () => { modal.style.display = 'none'; };
+        modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+    }
+
+    async function refreshListDisplay(questionId) {
+        await loadFavoriteLists();
+        const container = document.getElementById('existingLists');
+        if (!container) return;
+        if (userFavoriteLists.length === 0) {
+            container.innerHTML = '<div style="padding: 10px; text-align: center;">No lists yet. Create one above.</div>';
+            return;
+        }
+        container.innerHTML = userFavoriteLists.map(list => {
+            const isInList = currentQuestionLists.has(list.id);
+            const checkMark = isInList ? '✓ ' : '';
+            const actionText = isInList ? 'Remove' : '+ Add';
+            const bgColor = isInList ? '#e8f5e9' : '#f0f0f0';
+            const textColor = isInList ? '#2e7d32' : '#2c5f2d';
+            return `
+                <div class="list-item" data-list-id="${list.id}" data-list-name="${escapeHtml(list.list_name)}" style="padding: 10px; margin: 5px 0; background: ${bgColor}; border-radius: 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${isInList ? '#4caf50' : '#ccc'};">
+                    <span>${escapeHtml(list.icon || '📁')} ${escapeHtml(list.list_name)} (${list.question_count || 0}Q)</span>
+                    <span style="color: ${textColor}; font-weight: bold;">${checkMark}${actionText}</span>
+                </div>
+            `;
+        }).join('');
+        document.querySelectorAll('.list-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const listId = parseInt(item.dataset.listId);
+                const listName = item.dataset.listName;
+                if (currentQuestionLists.has(listId)) {
+                    if (confirm(`Remove this question from "${listName}"?`)) removeFromFavoriteList(questionId, listId);
+                } else {
+                    addToFavoriteListAndUpdate(questionId, listId);
+                }
+            });
+        });
+    }
+
+    async function createNewList(listName, questionId) {
+        const token = localStorage.getItem('session_token');
+        const response = await fetch(API_FAVORITE_LISTS, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'create_list',
+                token: token,
+                list_name: listName
+            })
+        });
+        const result = await response.json();
+        if (result.success) await addToFavoriteListAndUpdate(questionId, result.list_id);
+        else alert('Error creating list');
+    }
+
+    async function toggleFavorite(questionId) {
+        await showFavoriteMenu(questionId);
+    }
+
+    // ============================================
+    // REPORT FUNCTION
+    // ============================================
+    async function reportQuestion() {
+        const q = questions[currentIndex];
+        if (!q) return;
+        if (!confirm(`Report this question for review?\n\n"${q.text.substring(0, 100)}..."`)) return;
+        const token = localStorage.getItem('session_token');
+        const reportBtn = document.getElementById('reportBtn');
+        if (reportBtn) {
+            reportBtn.innerHTML = '⏳';
+            reportBtn.disabled = true;
+        }
+        try {
+            const response = await fetch(API_REPORT_QUESTION, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    token: token,
+                    question_id: q.id,
+                    book_id: BOOK_ID,
+                    chapter_key: CHAPTER_KEY
+                })
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert('✅ Question reported. Thank you!');
+                if (reportBtn) {
+                    reportBtn.innerHTML = '✅';
+                    setTimeout(() => {
+                        reportBtn.innerHTML = '⛔';
+                        reportBtn.disabled = false;
+                    }, 2000);
+                }
+            } else {
+                alert('Error: ' + (result.error || 'Could not report question'));
+                if (reportBtn) {
+                    reportBtn.innerHTML = '⛔';
+                    reportBtn.disabled = false;
+                }
+            }
+        } catch(e) {
+            alert('Network error: ' + e.message);
+            if (reportBtn) {
+                reportBtn.innerHTML = '⛔';
+                reportBtn.disabled = false;
+            }
+        }
+    }
+
+    // ============================================
+    // AI FUNCTIONS
+    // ============================================
+    function formatQuestionText(q) {
+        let text = `Question: ${q.text}\n\nOptions:\n`;
+        const letters = ['A', 'B', 'C', 'D', 'E'];
+        for (let l of letters) {
+            if (q.options[l]) text += `${l}. ${q.options[l]}\n`;
+        }
+        text += `\nCorrect answer: ${q.correct_answer}\n\nPlease explain why this is correct and why the other options are wrong.`;
+        return text;
+    }
+
+    async function askGemini() {
+        const q = questions[currentIndex];
+        if (!q) return;
+        const text = formatQuestionText(q);
+        try {
+            await navigator.clipboard.writeText(text);
+            alert('✅ Question and options copied!\n\nOpen Gemini (gemini.google.com) and press Ctrl+V to paste.');
+        } catch(e) {
+            alert('❌ Could not copy automatically. Please copy manually.');
+        }
+        window.open('https://gemini.google.com/', '_blank');
+    }
+
+    async function askDeepSeek() {
+        const q = questions[currentIndex];
+        if (!q) return;
+        const text = formatQuestionText(q);
+        try {
+            await navigator.clipboard.writeText(text);
+            alert('✅ Question and options copied!\n\nOpen DeepSeek Chat (chat.deepseek.com) and press Ctrl+V to paste.');
+        } catch(e) {
+            alert('❌ Could not copy automatically. Please copy manually.');
+        }
+        window.open('https://chat.deepseek.com/', '_blank');
+    }
+
+    async function askChatGPT() {
+        const q = questions[currentIndex];
+        if (!q) return;
+        const text = formatQuestionText(q);
+        try {
+            await navigator.clipboard.writeText(text);
+            alert('✅ Question and options copied!\n\nOpen ChatGPT (chat.openai.com) and press Ctrl+V to paste.');
+        } catch(e) {
+            alert('❌ Could not copy automatically. Please copy manually.');
+        }
+        window.open('https://chat.openai.com/', '_blank');
+    }
+
+    // ============================================
+    // LOGIN & LOAD QUESTIONS
+    // ============================================
+    async function checkUserSession() {
+        const token = localStorage.getItem('session_token');
+        if (!token) { 
+            localStorage.setItem('redirectAfterLogin', window.location.pathname + window.location.search);
+            window.location.href = '../../login.html';
+            return false;
+        }
+        try {
+            const response = await fetch(API_AUTH, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'verify', token: token })
+            });
+            const result = await response.json();
+            if (result.success) {
+                currentUserId = result.user_id;
+                const username = localStorage.getItem('username') || 'User';
+                document.getElementById('userDisplay').textContent = `👤 ${username}`;
+                return true;
+            } else {
+                localStorage.clear();
+                window.location.href = '../../login.html';
+                return false;
+            }
+        } catch(e) {
+            window.location.href = '../../login.html';
+            return false;
+        }
+    }
+
+    function findFirstUnanswered() { return answersState.findIndex(s => !s.submitted); }
+    function scrollNavigatorToCurrent() {
+        setTimeout(() => {
+            const currentBtn = document.querySelector(`.nav-q-btn.current`);
+            if (currentBtn) currentBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }, 150);
+    }
+
+    async function loadQuestions() {
+        if (!chapterConfig) return;
+        try {
+            const response = await fetch(API_GET_QUESTIONS);
+            if (!response.ok) throw new Error('Network failed');
+            const allQuestions = await response.json();
+            if (allQuestions.error) throw new Error(allQuestions.error);
+            
+            const start = chapterConfig.start_question_idx;
+            const end = chapterConfig.end_question_idx;
+            const freshQuestions = allQuestions.slice(start, end);
+            if (freshQuestions.length === 0) throw new Error(`No questions found for indices ${start} to ${end}.`);
+            
+            // FIRST: Load from cloud (authoritative source)
+            const cloudProgress = await loadProgressFromCloud();
+            const newAnswersState = freshQuestions.map((q) => ({ 
+                selectedAnswer: null, submitted: false, isCorrect: false, questionId: q.id 
+            }));
+            
+            let loadedFromCloud = 0;
+            if (cloudProgress && cloudProgress.quizState && cloudProgress.quizState.answersState) {
+                const savedAnswers = cloudProgress.quizState.answersState;
+                for (let i = 0; i < newAnswersState.length; i++) {
+                    const currentQId = newAnswersState[i].questionId;
+                    const saved = savedAnswers.find(s => s.questionId === currentQId);
+                    if (saved && saved.submitted) {
+                        newAnswersState[i] = { ...saved };
+                        loadedFromCloud++;
+                    }
+                }
+                console.log(`Loaded ${loadedFromCloud} answers from cloud`);
+            } else {
+                console.log('No cloud progress found - starting fresh');
+            }
+            
+            answersState = newAnswersState;
+            questions = freshQuestions;
+            currentIndex = findFirstUnanswered() !== -1 ? findFirstUnanswered() : 0;
+            
+            await loadAllFavoriteQuestionIds();
+            await loadFavoriteLists();
+            
+            document.getElementById('scoreDisplay').innerHTML = `⭐ 0 / ${questions.length}`;
+            tempSelectedAnswer = null;
+            showFeedback = false;
+            loading = false;
+            fullRender();
+            initScroll();
+            scrollNavigatorToCurrent();
+            setTimeout(() => scrollToQuestion(), 100);
+        } catch(e) {
+            console.error(e);
+            document.getElementById('dynamicContent').innerHTML = `<div class="loading-container" style="color:red;"><p>❌ Failed to load questions: ${e.message}</p><button onclick="location.reload()" style="margin-top:20px; padding:10px 20px; background:#2c5f2d; color:white; border:none; border-radius:8px;">Retry</button></div>`;
+        }
+    }
+
+    // ============================================
+    // SUBMIT ANSWER (no local cache - always verify with server)
+    // But show loading indicator to prevent double-click
+    // ============================================
+    let isSubmitting = false;
+    
+    async function submitAnswer(answer) {
+        if (!questions.length) return null;
+        if (isSubmitting) {
+            alert('Please wait, submitting your answer...');
+            return null;
+        }
+        
+        const q = questions[currentIndex];
+        isSubmitting = true;
+        
+        // Show loading state on button
+        const submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) {
+            submitBtn.textContent = '⏳ Checking...';
+            submitBtn.disabled = true;
+        }
+        
+        try {
+            const res = await fetch(API_CHECK_ANSWER, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ question_id: q.id, answer: answer }) 
+            });
+            const result = await res.json();
+            
+            if (result) {
+                const isCor = result.correct;
+                
+                answersState[currentIndex].submitted = true;
+                answersState[currentIndex].isCorrect = isCor;
+                answersState[currentIndex].selectedAnswer = answer;
+                tempSelectedAnswer = answer;
+                showFeedback = true;
+                
+                // Save to cloud in background (debounced)
+                debouncedSave();
+                
+                fullRender();
+                scrollNavigatorToCurrent();
+                setTimeout(() => scrollToOptions(), 150);
+                return result;
+            }
+            return null;
+        } catch(e) {
+            console.error('Submit error:', e);
+            alert('Network error. Please try again.');
+            return null;
+        } finally {
+            isSubmitting = false;
+            if (submitBtn) {
+                submitBtn.textContent = '✅ Submit Answer';
+                submitBtn.disabled = false;
+            }
+        }
+    }
+
+    async function handleSubmit() {
+        if (!questions.length) return;
+        if (!tempSelectedAnswer) { alert('Select an answer first'); return; }
+        await submitAnswer(tempSelectedAnswer);
+    }
+
+    function handleNext() {
+        if (!questions.length) return;
+        if (currentIndex < questions.length - 1) {
+            currentIndex++;
+            tempSelectedAnswer = null;
+            showFeedback = false;
+            fullRender();
+            scrollNavigatorToCurrent();
+            scrollToQuestion();
+        } else {
+            const allAnswered = answersState.every(s => s.submitted);
+            if (allAnswered) showFinalScore();
+            else {
+                const firstUnanswered = answersState.findIndex(s => !s.submitted);
+                if (firstUnanswered !== -1) {
+                    currentIndex = firstUnanswered;
+                    tempSelectedAnswer = null;
+                    showFeedback = false;
+                    fullRender();
+                    scrollNavigatorToCurrent();
+                    scrollToQuestion();
+                }
+            }
+        }
+    }
+
+    function handleNavigatorClick(idx) {
+        if (!questions.length) return;
+        currentIndex = idx;
+        tempSelectedAnswer = null;
+        showFeedback = false;
+        fullRender();
+        scrollNavigatorToCurrent();
+        scrollToQuestion();
+    }
+
+    function computeCorrect() { 
+        let c = 0; 
+        for (let i = 0; i < questions.length; i++) if (answersState[i].submitted && answersState[i].isCorrect) c++; 
+        return c; 
+    }
+    function getIncorrectCount() {
+        let c = 0;
+        for (let i = 0; i < answersState.length; i++) if (answersState[i].submitted && !answersState[i].isCorrect) c++;
+        return c;
+    }
+
+    function updateHeader() {
+        const correct = computeCorrect();
+        const incorrect = getIncorrectCount();
+        const answered = answersState.filter(s => s.submitted).length;
+        document.getElementById('scoreDisplay').innerHTML = `⭐ ${correct} / ${answered} answered | ❌ ${incorrect} incorrect`;
+        document.getElementById('qCounterDisplay').innerHTML = `Q${currentIndex+1}`;
+    }
+
+    function scrollStrip(dir) { 
+        const strip = document.getElementById('questionStrip'); 
+        if (strip) strip.scrollBy({ left: dir === 'left' ? -200 : 200, behavior: 'smooth' }); 
+    }
+
+    function renderNav() {
+        const strip = document.getElementById('questionStrip');
+        if (!strip || !questions.length) return;
+        let html = '';
+        for (let i = 0; i < questions.length; i++) {
+            const s = answersState[i];
+            let cls = 'unanswered';
+            if (s && s.submitted) cls = s.isCorrect ? 'correct' : 'incorrect';
+            if (i === currentIndex) cls += ' current';
+            html += `<div class="nav-q-btn ${cls}" data-idx="${i}">${i+1}</div>`;
+        }
+        strip.innerHTML = html;
+        document.querySelectorAll('.nav-q-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = parseInt(btn.dataset.idx);
+                if (!isNaN(idx)) handleNavigatorClick(idx);
+            });
+        });
+    }
+
+    function scrollToQuestion() {
+        setTimeout(() => {
+            const qText = document.querySelector('.question-text');
+            if (qText) {
+                const stickyH = document.getElementById('stickyStrip')?.offsetHeight || 60;
+                window.scrollTo({ top: qText.getBoundingClientRect().top + window.pageYOffset - stickyH - 15, behavior: 'smooth' });
+            }
+        }, 100);
+    }
+
+    function scrollToOptions() {
+        setTimeout(() => {
+            const optionsList = document.querySelector('.options-list');
+            if (optionsList) {
+                const stickyH = document.getElementById('stickyStrip')?.offsetHeight || 60;
+                window.scrollTo({ top: optionsList.getBoundingClientRect().top + window.pageYOffset - stickyH - 10, behavior: 'smooth' });
+            }
+        }, 100);
+    }
+
+    function selectAnswer(letter) {
+        if (!questions.length) return;
+        tempSelectedAnswer = letter;
+        fullRender();
+        setTimeout(() => scrollToOptions(), 100);
+    }
+
+    async function startReview() {
+        const incorrectCount = getIncorrectCount();
+        if (incorrectCount === 0) { alert('🎉 No incorrect answers in this mock exam!'); return; }
+        await saveToCloud();
+        localStorage.setItem('reviewChapterKey', CHAPTER_KEY);
+        localStorage.setItem('reviewBookId', BOOK_ID);
+        localStorage.setItem('reviewChapterName', chapterConfig.chapter_name);
+        localStorage.setItem('reviewChapterStartIdx', chapterConfig.start_question_idx);
+        localStorage.setItem('reviewChapterEndIdx', chapterConfig.end_question_idx);
+        window.location.href = 'review.html';
+    }
+
+    function fullRender() {
+        if (loading || !questions.length) return;
+        renderNav();
+        renderQuestion();
+        updateHeader();
+    }
+
+    function renderQuestion() {
+        const container = document.getElementById('dynamicContent');
+        const q = questions[currentIndex];
+        if (!q) return;
+        
+        const correctAnswer = q.correct_answer;
+        const isFavorited = favoritedQuestionIds.has(q.id);
+        const starIcon = isFavorited ? '⭐' : '☆';
+        
+        let optsHtml = '';
+        const letters = ['A', 'B', 'C', 'D', 'E'];
+        for (let l of letters) {
+            const txt = q.options[l];
+            if (!txt) continue;
+            let cls = '';
+            if (showFeedback && tempSelectedAnswer) {
+                if (l === correctAnswer) cls = 'submitted-correct';
+                else if (l === tempSelectedAnswer && l !== correctAnswer) cls = 'submitted-wrong';
+            } else if (tempSelectedAnswer === l && !showFeedback) cls = 'selected-pending';
+            optsHtml += `<div class="option-item ${cls}" data-letter="${l}"><div class="option-prefix">${l}</div><div class="option-text">${escapeHtml(txt)}</div></div>`;
+        }
+        
+        let fbHtml = '';
+        let geminiButtonHtml = '';
+        let deepseekButtonHtml = '';
+        let chatgptButtonHtml = '';
+        
+        if (showFeedback && tempSelectedAnswer) {
+            const isCor = (tempSelectedAnswer === correctAnswer);
+            const fbCls = isCor ? 'feedback-correct' : 'feedback-wrong';
+            geminiButtonHtml = `<button id="geminiBtn" class="ai-btn gemini-btn">🤖 Ask Gemini</button>`;
+            deepseekButtonHtml = `<button id="deepseekBtn" class="ai-btn deepseek-btn">🧠 Ask DeepSeek</button>`;
+            chatgptButtonHtml = `<button id="chatgptBtn" class="ai-btn chatgpt-btn">💬 Ask ChatGPT</button>`;
+            fbHtml = `<div class="feedback-card ${fbCls}">
+                <strong>${isCor ? '✓ Correct' : '✗ Incorrect'}</strong>
+                <div class="explanation">
+                    <strong>Correct answer: ${correctAnswer}</strong><br>${escapeHtml(q.explanation)}
+                </div>
+                <div class="ai-buttons">
+                    ${geminiButtonHtml}
+                    ${deepseekButtonHtml}
+                    ${chatgptButtonHtml}
+                </div>
+            </div>`;
+        } else {
+            fbHtml = `<div class="feedback-card feedback-neutral">📌 Select an answer, then click Submit to check your answer</div>`;
+        }
+        
+        const incorrectCount = getIncorrectCount();
+        let mainButton = '';
+        if (showFeedback) {
+            mainButton = `<button class="btn-main next-mode" id="nextBtn">➡️ Next Question</button>`;
+        } else {
+            mainButton = `<button class="btn-main" id="submitBtn">✅ Submit Answer</button>`;
+        }
+        const reviewBtnHtml = (incorrectCount > 0) ? `<button class="btn-review" id="reviewBtn">📚 Review Incorrect (${incorrectCount})</button>` : '';
+        const actionRowButtons = `<div class="action-row">${mainButton} ${reviewBtnHtml}</div>`;
+        
+        const html = `<div class="question-body">
+            <div class="question-text" id="questionText">
+                ${escapeHtml(q.text)}
+                <div class="question-actions">
+                    <button id="favoriteStarBtn" class="action-icon favorite-icon" title="${isFavorited ? 'Remove from favorites' : 'Add to favorites'}">${starIcon}</button>
+                    <button id="reportBtn" class="action-icon report-icon" title="Report this question">⛔</button>
+                </div>
+            </div>
+            <div class="options-list">${optsHtml}</div>
+            <div class="action-area">
+                ${actionRowButtons}
+            </div>
+            ${fbHtml}
+            <hr>
+            <div class="bottom-nav">
+                <a href="chapters.html?book_id=${BOOK_ID}">← Back to Chapters</a>
+                <a href="index.html">📚 Exam Menu</a>
+            </div>
+        </div>`;
+        
+        container.innerHTML = html;
+        
+        // Apply book color to buttons
+        const submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) submitBtn.style.background = bookColor;
+        const nextBtn = document.getElementById('nextBtn');
+        if (nextBtn) nextBtn.style.background = bookColor;
+        const bottomNavLast = document.querySelector('.bottom-nav a:last-child');
+        if (bottomNavLast) bottomNavLast.style.background = bookColor;
+        const questionTextDiv = document.getElementById('questionText');
+        if (questionTextDiv) questionTextDiv.style.borderLeftColor = bookColor;
+        
+        document.querySelectorAll('.option-item').forEach(div => {
+            div.addEventListener('click', () => selectAnswer(div.dataset.letter));
+        });
+        if (!showFeedback) document.getElementById('submitBtn')?.addEventListener('click', handleSubmit);
+        else document.getElementById('nextBtn')?.addEventListener('click', handleNext);
+        document.getElementById('reviewBtn')?.addEventListener('click', startReview);
+        document.getElementById('favoriteStarBtn')?.addEventListener('click', () => toggleFavorite(q.id));
+        document.getElementById('reportBtn')?.addEventListener('click', reportQuestion);
+        if (geminiButtonHtml) document.getElementById('geminiBtn')?.addEventListener('click', askGemini);
+        if (deepseekButtonHtml) document.getElementById('deepseekBtn')?.addEventListener('click', askDeepSeek);
+        if (chatgptButtonHtml) document.getElementById('chatgptBtn')?.addEventListener('click', askChatGPT);
+    }
+
+    function showFinalScore() {
+        const correct = computeCorrect();
+        const percent = Math.round(correct / questions.length * 100);
+        const incorrectCount = getIncorrectCount();
+        const container = document.getElementById('dynamicContent');
+        container.innerHTML = `<div style="text-align:center;padding:2rem;">
+            <div style="font-size:1.2rem;color:#2c5f2d;">${chapterConfig.icon || '📝'} ${chapterConfig.chapter_name} Completed!</div>
+            <div style="font-size:2rem;font-weight:800;">${correct}/${questions.length}</div>
+            <div style="font-size:1.2rem;margin:8px;">${percent}%</div>
+            ${incorrectCount > 0 ? `<div style="background:#fee2e2;padding:15px;border-radius:12px;margin:15px 0;"><strong>📝 Review Needed:</strong> ${incorrectCount} incorrect question${incorrectCount > 1 ? 's' : ''}<br><button id="reviewFinalBtn" class="btn-review" style="margin-top:10px;">📚 Review Incorrect (${incorrectCount})</button></div>` : `<div style="background:#d1fae5;padding:15px;border-radius:12px;margin:15px 0;">🎉 PERFECT SCORE!</div>`}
+            <button id="restartBtn" class="btn-main">🔄 Restart Chapter</button>
+            <a href="chapters.html?book_id=${BOOK_ID}" class="btn-main" style="background:#2b8c5e;text-decoration:none;display:inline-block;">📖 Back to Chapters</a>
+            <a href="index.html" class="btn-clear" style="margin-top:12px;display:inline-block;text-decoration:none;background:#f0f2f5;color:#4a627a;padding:12px 24px;border-radius:60px;">📚 Exam Menu</a>
+            <button onclick="logout()" class="btn-clear" style="margin-top:12px;display:inline-block;background:#fee2e2;color:#dc2626;">🚪 Logout</button>
+        </div>`;
+        
+        const restartBtn = document.getElementById('restartBtn');
+        if (restartBtn) restartBtn.style.background = bookColor;
+        
+        document.getElementById('restartBtn')?.addEventListener('click', async () => { 
+            answersState = questions.map(q => ({ selectedAnswer: null, submitted: false, isCorrect: false, questionId: q.id })); 
+            await saveToCloud();
+            currentIndex = findFirstUnanswered();
+            tempSelectedAnswer = null;
+            showFeedback = false;
+            fullRender(); 
+            scrollNavigatorToCurrent();
+            scrollToQuestion(); 
+        });
+        document.getElementById('reviewFinalBtn')?.addEventListener('click', startReview);
+    }
+
+    function logout() {
+        const token = localStorage.getItem('session_token');
+        if (token) fetch(API_AUTH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'logout', token: token }) }).catch(e=>{});
+        localStorage.clear();
+        window.location.href = '../../login.html';
+    }
+
+    function escapeHtml(s) { 
+        if (!s) return ''; 
+        return s.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); 
+    }
+    
+    function initScroll() { 
+        document.getElementById('scrollLeftBtn')?.addEventListener('click', () => scrollStrip('left')); 
+        document.getElementById('scrollRightBtn')?.addEventListener('click', () => scrollStrip('right')); 
+    }
+    
+    async function init() { 
+        const configOk = await loadChapterConfig();
+        if (!configOk) return;
+        const loggedIn = await checkUserSession();
+        if (loggedIn) {
+            await loadQuestions();
+        }
+    }
+    
+    init();
+</script>
+</p>
+</body>
+</html>

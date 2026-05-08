@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>Favorite List | MasterPass</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', system-ui, sans-serif;
+            background: linear-gradient(145deg, #eef2f7 0%, #d4dce6 100%);
+            min-height: 100vh;
+            padding: max(12px, 1.5vh) max(16px, 2vw);
+        }
+        .quiz-card {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: clamp(24px, 4vw, 36px);
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.25);
+            overflow: visible;
+        }
+        .quiz-header {
+            padding: clamp(12px, 2vh, 20px) clamp(16px, 3vw, 28px);
+            background: #228B22;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .title-section h1 { font-size: clamp(1rem, 4vw, 1.3rem); font-weight: 600; }
+        .title-section p { font-size: clamp(0.65rem, 2.5vw, 0.75rem); opacity: 0.8; margin-top: 4px; }
+        .home-link, .book-link {
+            background: rgba(255,255,255,0.15);
+            padding: 6px 15px;
+            border-radius: 30px;
+            text-decoration: none;
+            color: white;
+            font-size: 0.8rem;
+            transition: background 0.2s;
+        }
+        .home-link:hover, .book-link:hover { background: rgba(255,255,255,0.25); }
+        .stats-group {
+            display: flex;
+            gap: 12px;
+            background: rgba(255,255,255,0.12);
+            padding: 8px 16px;
+            border-radius: 60px;
+        }
+        .stat-item { font-size: clamp(0.7rem, 2.5vw, 0.85rem); font-weight: 500; }
+        .nav-header-section {
+            padding: clamp(8px, 1.5vh, 14px) clamp(12px, 3vw, 24px);
+            background: #f8fafd;
+            border-bottom: 1px solid #e2edf2;
+        }
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .nav-title { font-size: clamp(0.7rem, 2.8vw, 0.8rem); font-weight: 600; color: #1e4a76; }
+        .legend {
+            display: flex;
+            gap: clamp(10px, 2.5vw, 20px);
+            font-size: clamp(0.6rem, 2.2vw, 0.7rem);
+        }
+        .legend span { display: inline-flex; align-items: center; gap: 5px; }
+        .legend-color { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+        .sticky-strip-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #f8fafd;
+            border-bottom: 1px solid #e2edf2;
+            padding: 8px clamp(12px, 3vw, 24px);
+        }
+        .question-strip-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .scroll-btn {
+            background: #e2e8f0;
+            border: none;
+            width: 32px;
+            height: 44px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #1e4a76;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            touch-action: manipulation;
+        }
+        .scroll-btn:hover { background: #cbd5e1; }
+        .scroll-btn:active { transform: scale(0.95); }
+        .question-strip {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 8px;
+            padding: 6px 4px 8px 4px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            flex: 1;
+            scrollbar-width: thin;
+        }
+        .question-strip::-webkit-scrollbar { height: 4px; }
+        .question-strip::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
+        .question-strip::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        .nav-q-btn {
+            flex: 0 0 auto;
+            width: clamp(40px, 8vw, 52px);
+            height: clamp(40px, 8vw, 52px);
+            border-radius: 16px;
+            background: #f1f5f9;
+            border: 1.5px solid #e2e8f0;
+            font-weight: 700;
+            font-size: clamp(0.85rem, 3vw, 1rem);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            color: #1e293b;
+        }
+        .nav-q-btn.unanswered { background: #f1f5f9; border-left: 5px solid #94a3b8; }
+        .nav-q-btn.correct { background: #d1fae5; border-left: 5px solid #10b981; color: #065f46; }
+        .nav-q-btn.incorrect { background: #fee2e2; border-left: 5px solid #ef4444; color: #991b1b; }
+        .nav-q-btn.current { background: #e0f2fe; border: 2px solid #228B22; box-shadow: 0 0 0 2px #f0c0a0; font-weight: 800; }
+        .question-body {
+            padding: clamp(20px, 4vh, 32px) clamp(20px, 5vw, 40px);
+        }
+        .question-text {
+            font-size: clamp(1rem, 4.5vw, 1.35rem);
+            font-weight: 500;
+            line-height: 1.5;
+            color: #0a2540;
+            margin-bottom: clamp(24px, 5vh, 36px);
+            background: #fafcff;
+            padding: clamp(14px, 2vh, 20px);
+            border-radius: 24px;
+            border-left: 5px solid #228B22;
+            scroll-margin-top: 90px;
+        }
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: clamp(12px, 2vh, 18px);
+            margin-bottom: clamp(24px, 4vh, 32px);
+            scroll-margin-top: 90px;
+        }
+        .option-item {
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 20px;
+            padding: clamp(14px, 2.5vh, 20px) clamp(16px, 3vw, 24px);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: clamp(12px, 2.5vw, 18px);
+        }
+        .option-item:hover { background: #f9fcff; border-color: #bdd3e8; transform: translateX(4px); }
+        .option-item.submitted-correct { background: #e3f7ec; border-color: #2b8c5e; }
+        .option-item.submitted-wrong { background: #fee9e6; border-color: #d9534f; }
+        .option-item.selected-pending { background: #fff8e7; border-color: #f0b429; box-shadow: 0 0 0 1px #f0b429; }
+        .option-prefix {
+            font-weight: 700;
+            font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+            background: #f0f4f9;
+            width: clamp(36px, 7vw, 44px);
+            height: clamp(36px, 7vw, 44px);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 40px;
+            color: #1e466e;
+            flex-shrink: 0;
+        }
+        .option-text {
+            font-size: clamp(0.85rem, 3.2vw, 1rem);
+            line-height: 1.45;
+            color: #1e2f3e;
+            flex: 1;
+        }
+        .feedback-card {
+            border-radius: 20px;
+            padding: clamp(14px, 2.5vh, 20px) clamp(16px, 3vw, 24px);
+            margin: 16px 0 20px 0;
+            border-left: 6px solid;
+            font-size: clamp(0.85rem, 3vw, 0.95rem);
+            scroll-margin-top: 90px;
+        }
+        .feedback-correct { background: #eef7f1; border-left-color: #2b8c5e; }
+        .feedback-wrong { background: #fef4f2; border-left-color: #d9534f; }
+        .feedback-neutral { background: #f0f6fa; border-left-color: #228B22; }
+        .explanation { margin-top: 10px; line-height: 1.5; }
+        .action-area {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 20px 0 16px;
+        }
+        .btn-main {
+            width: 100%;
+            background: #8B4513;
+            color: white;
+            border: none;
+            padding: clamp(14px, 2.5vh, 18px);
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: clamp(0.9rem, 3.5vw, 1.05rem);
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+        .btn-main.next-mode { background: #2b8c5e; }
+        .btn-review { background: #e67e22; width: 100%; padding: clamp(14px, 2.5vh, 18px); border-radius: 60px; font-weight: 700; color: white; border: none; cursor: pointer; }
+        .btn-review:hover { background: #f39c12; }
+        hr { margin: 24px 0 0; border: none; border-top: 1px solid #e9edf2; }
+        .footer-note {
+            background: #fef9e6;
+            padding: clamp(10px, 2vh, 16px);
+            font-size: clamp(0.65rem, 2.5vw, 0.75rem);
+            color: #856404;
+            text-align: center;
+            border-top: 1px solid #ffeeba;
+        }
+        .loading-container { text-align: center; padding: 60px 20px; color: #8B4513; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #8B4513;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .sync-status {
+            font-size: 0.7rem;
+            margin-left: 10px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.2);
+        }
+        .sync-status.saved { background: #10b981; }
+        .sync-status.saving { background: #e67e22; }
+        .user-display {
+            font-size: 0.8rem;
+            background: rgba(255,255,255,0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        @media (min-width: 1024px) {
+            .options-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+            .action-area { flex-direction: row; flex-wrap: wrap; }
+            .btn-main, .btn-review { width: auto; min-width: 200px; }
+        }
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .options-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+            .action-area { flex-direction: row; flex-wrap: wrap; }
+            .btn-main, .btn-review { width: auto; flex: 1; }
+        }
+        @media (max-width: 480px) { .scroll-btn { width: 28px; font-size: 1rem; } }
+        .option-item, .nav-q-btn, button { touch-action: manipulation; cursor: pointer; }
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body>
+<div class="quiz-card" id="quizRoot">
+    <div class="quiz-header">
+        <div class="title-section">
+            <h1 id="listTitle">⭐ Favorite List</h1>
+            <p id="listDesc" class="list-desc">Questions you saved</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <span id="syncStatus" class="sync-status">☁️ Synced</span>
+            <span id="userDisplay" class="user-display">👤 Loading...</span>
+            <a href="favorites.html" class="book-link">📚 My Lists</a>
+            <a href="../../index.html" class="home-link">🏠 Library</a>
+        </div>
+        <div class="stats-group">
+            <div class="stat-item" id="scoreDisplay">⭐ 0 / 0</div>
+            <div class="stat-item" id="qCounterDisplay">Q1</div>
+        </div>
+    </div>
+
+    <div class="nav-header-section">
+        <div class="nav-header">
+            <div class="nav-title">📌 JUMP TO QUESTION</div>
+            <div class="legend">
+                <span><div class="legend-color" style="background:#f1f5f9; border-left:3px solid #94a3b8;"></div> Unanswered</span>
+                <span><div class="legend-color" style="background:#d1fae5; border-left:3px solid #10b981;"></div> Correct</span>
+                <span><div class="legend-color" style="background:#fee2e2; border-left:3px solid #ef4444;"></div> Incorrect</span>
+                <span><div class="legend-color" style="background:#e0f2fe; border:2px solid #8B4513;"></div> Current</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="sticky-strip-wrapper" id="stickyStrip">
+        <div class="question-strip-wrapper">
+            <button class="scroll-btn" id="scrollLeftBtn">◀</button>
+            <div id="questionStrip" class="question-strip"></div>
+            <button class="scroll-btn" id="scrollRightBtn">▶</button>
+        </div>
+    </div>
+
+    <div id="dynamicContent">
+        <div class="loading-container">
+            <div class="loader"></div>
+            <p>Loading your favorite questions...</p>
+        </div>
+    </div>
+    <div class="footer-note">
+        ✅ Select answer → Submit → Read explanation | 📊 Navigator shows your progress | ❌ Remove questions from list
+    </div>
+</div>
+
+<script>
+    // API endpoints
+    const API_CHECK_ANSWER = '../../api/api_check_answer.php';
+    const API_AUTH = '../../api/auth.php';
+    const API_FAVORITE = 'api/favorite_lists.php'; // adjust path if needed
+
+    let questions = [];         // full question objects from the list
+    let answersState = [];      // { selectedAnswer, submitted, isCorrect, questionId }
+    let currentIndex = 0;
+    let loading = true;
+    let currentUserId = null;
+    let tempSelectedAnswer = null;
+    let showFeedback = false;
+    let listId = null;
+    let listName = '';
+
+    // ============================================
+    // LOGIN & SESSION
+    // ============================================
+    async function checkUserSession() {
+        const token = localStorage.getItem('session_token');
+        if (!token) { 
+            localStorage.setItem('redirectAfterLogin', window.location.pathname);
+            window.location.href = '../../login.html';
+            return false;
+        }
+        try {
+            const response = await fetch(API_AUTH, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'verify', token: token })
+            });
+            const result = await response.json();
+            if (result.success) {
+                currentUserId = result.user_id;
+                const username = localStorage.getItem('username') || 'User';
+                document.getElementById('userDisplay').textContent = `👤 ${username}`;
+                return true;
+            } else {
+                localStorage.clear();
+                window.location.href = '../../login.html';
+                return false;
+            }
+        } catch(e) {
+            window.location.href = '../../login.html';
+            return false;
+        }
+    }
+
+    function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+    }
+
+    // ============================================
+    // LOAD QUESTIONS FROM FAVORITE LIST
+    // ============================================
+    async function loadQuestionsFromList() {
+        const token = localStorage.getItem('session_token');
+        if (!token) return;
+        
+        try {
+            const url = `${API_FAVORITE}?action=get_list_questions&list_id=${listId}&token=${token}`;
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Network error');
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to load list');
+            }
+            
+            questions = result.questions || [];
+            listName = result.list_name || getQueryParam('name') || 'Favorite List';
+            document.getElementById('listTitle').innerHTML = `⭐ ${escapeHtml(listName)}`;
+            document.getElementById('listDesc').innerHTML = `${questions.length} question${questions.length !== 1 ? 's' : ''}`;
+            
+            if (questions.length === 0) {
+                document.getElementById('dynamicContent').innerHTML = `<div class="loading-container"><p>📭 No questions in this list yet.<br>Add some from mock exams by clicking the ☆ star.</p><a href="mock1.html" class="btn-main" style="display:inline-block; margin-top:20px;">Go to Mock Exam</a></div>`;
+                loading = false;
+                return;
+            }
+            
+            // Initialize answersState
+            answersState = questions.map(q => ({
+                selectedAnswer: null,
+                submitted: false,
+                isCorrect: false,
+                questionId: q.id
+            }));
+            
+            currentIndex = 0;
+            tempSelectedAnswer = null;
+            showFeedback = false;
+            loading = false;
+            fullRender();
+            initScroll();
+            setTimeout(() => scrollToQuestion(), 100);
+            
+        } catch(e) {
+            console.error('Load error:', e);
+            document.getElementById('dynamicContent').innerHTML = `<div class="loading-container" style="color:red;"><p>❌ Failed to load: ${e.message}</p><button onclick="location.reload()" style="margin-top:20px; padding:10px 20px; background:#8B4513; color:white; border:none; border-radius:8px;">Retry</button></div>`;
+        }
+    }
+
+    // ============================================
+    // ANSWER CHECKING
+    // ============================================
+    async function submitAnswer(answer) {
+        if (!questions.length) return;
+        const q = questions[currentIndex];
+        
+        const res = await fetch(API_CHECK_ANSWER, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ question_id: q.id, answer: answer }) 
+        });
+        const result = await res.json();
+        
+        if (result) {
+            const isCor = result.correct;
+            answersState[currentIndex].submitted = true;
+            answersState[currentIndex].isCorrect = isCor;
+            answersState[currentIndex].selectedAnswer = answer;
+            
+            tempSelectedAnswer = answer;
+            showFeedback = true;
+            
+            fullRender();
+            scrollNavigatorToCurrent();
+            return result;
+        }
+        return null;
+    }
+
+    async function handleSubmit() {
+        if (!questions.length) return;
+        if (!tempSelectedAnswer) { 
+            alert('Select an answer first'); 
+            return; 
+        }
+        const btn = document.getElementById('submitBtn');
+        if (btn) { btn.textContent = '⏳ Checking...'; btn.disabled = true; }
+        const result = await submitAnswer(tempSelectedAnswer);
+        if (btn) { btn.disabled = false; btn.textContent = '✅ Submit Answer'; }
+        if (!result) alert('Error checking answer');
+    }
+
+    function handleNext() {
+        if (!questions.length) return;
+        if (currentIndex < questions.length - 1) {
+            currentIndex++;
+            tempSelectedAnswer = null;
+            showFeedback = false;
+            fullRender();
+            scrollNavigatorToCurrent();
+            scrollToQuestion();
+        } else {
+            // All questions completed
+            showFinalScore();
+        }
+    }
+
+    // ============================================
+    // REMOVE QUESTION FROM LIST
+    // ============================================
+    async function removeCurrentFromList() {
+        if (!questions.length) return;
+        const q = questions[currentIndex];
+        if (!confirm(`Remove this question from "${listName}"?`)) return;
+        
+        const token = localStorage.getItem('session_token');
+        try {
+            const response = await fetch(API_FAVORITE, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'remove_from_list',
+                    token: token,
+                    list_id: listId,
+                    question_id: q.id
+                })
+            });
+            const result = await response.json();
+            if (result.success) {
+                // Remove from local array
+                questions.splice(currentIndex, 1);
+                answersState.splice(currentIndex, 1);
+                if (questions.length === 0) {
+                    // Reload page to show empty state
+                    location.reload();
+                    return;
+                }
+                if (currentIndex >= questions.length) currentIndex = questions.length - 1;
+                tempSelectedAnswer = null;
+                showFeedback = false;
+                fullRender();
+                scrollNavigatorToCurrent();
+                scrollToQuestion();
+                document.getElementById('listDesc').innerHTML = `${questions.length} question${questions.length !== 1 ? 's' : ''}`;
+            } else {
+                alert('Error: ' + (result.error || 'Could not remove'));
+            }
+        } catch(e) {
+            alert('Network error: ' + e.message);
+        }
+    }
+
+    // ============================================
+    // UI HELPERS
+    // ============================================
+    function computeCorrect() { 
+        let c = 0; 
+        for (let i = 0; i < answersState.length; i++) { 
+            if (answersState[i].submitted && answersState[i].isCorrect) c++; 
+        } 
+        return c; 
+    }
+    
+    function getIncorrectCount() {
+        let c = 0;
+        for (let i = 0; i < answersState.length; i++) {
+            if (answersState[i].submitted && !answersState[i].isCorrect) c++;
+        }
+        return c;
+    }
+
+    function updateHeader() {
+        const correct = computeCorrect();
+        const answered = answersState.filter(s => s.submitted).length;
+        document.getElementById('scoreDisplay').innerHTML = `⭐ ${correct} correct / ${answered} answered`;
+        document.getElementById('qCounterDisplay').innerHTML = `Q${currentIndex+1}`;
+    }
+
+    function scrollNavigatorToCurrent() {
+        setTimeout(() => {
+            const currentBtn = document.querySelector(`.nav-q-btn.current`);
+            if (currentBtn) currentBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }, 150);
+    }
+
+    function scrollToQuestion() {
+        setTimeout(() => {
+            const qText = document.querySelector('.question-text');
+            if (qText) {
+                const stickyH = document.getElementById('stickyStrip')?.offsetHeight || 60;
+                window.scrollTo({ top: qText.getBoundingClientRect().top + window.pageYOffset - stickyH - 15, behavior: 'smooth' });
+            }
+        }, 100);
+    }
+
+    function selectAnswer(letter) {
+        if (!questions.length) return;
+        tempSelectedAnswer = letter;
+        fullRender();
+    }
+
+    function handleNavigatorClick(idx) {
+        if (!questions.length) return;
+        currentIndex = idx;
+        tempSelectedAnswer = null;
+        showFeedback = false;
+        fullRender();
+        scrollNavigatorToCurrent();
+        scrollToQuestion();
+    }
+
+    function renderNav() {
+        const strip = document.getElementById('questionStrip');
+        if (!strip || !questions.length) return;
+        let html = '';
+        for (let i = 0; i < questions.length; i++) {
+            const s = answersState[i];
+            let cls = 'unanswered';
+            if (s.submitted) cls = s.isCorrect ? 'correct' : 'incorrect';
+            if (i === currentIndex) cls += ' current';
+            html += `<div class="nav-q-btn ${cls}" data-idx="${i}">${i+1}</div>`;
+        }
+        strip.innerHTML = html;
+        document.querySelectorAll('.nav-q-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = parseInt(btn.dataset.idx);
+                if (!isNaN(idx)) handleNavigatorClick(idx);
+            });
+        });
+    }
+
+    function renderQuestion() {
+        const container = document.getElementById('dynamicContent');
+        const q = questions[currentIndex];
+        if (!q) return;
+        const correctAnswer = q.correct_answer;
+        
+        let optsHtml = '';
+        const letters = ['A', 'B', 'C', 'D', 'E'];
+        for (let l of letters) {
+            const txt = q.options[l];
+            if (!txt) continue;
+            let cls = '';
+            if (showFeedback && tempSelectedAnswer) {
+                if (l === correctAnswer) cls = 'submitted-correct';
+                else if (l === tempSelectedAnswer && l !== correctAnswer) cls = 'submitted-wrong';
+            } else if (tempSelectedAnswer === l && !showFeedback) {
+                cls = 'selected-pending';
+            }
+            optsHtml += `<div class="option-item ${cls}" data-letter="${l}"><div class="option-prefix">${l}</div><div class="option-text">${escapeHtml(txt)}</div></div>`;
+        }
+        
+        let fbHtml = '';
+        if (showFeedback && tempSelectedAnswer) {
+            const isCor = (tempSelectedAnswer === correctAnswer);
+            const fbCls = isCor ? 'feedback-correct' : 'feedback-wrong';
+            fbHtml = `<div class="feedback-card ${fbCls}"><strong>${isCor ? '✓ Correct' : '✗ Incorrect'}</strong><div class="explanation"><strong>Correct answer: ${correctAnswer}</strong><br>${escapeHtml(q.explanation)}</div></div>`;
+        } else if (!showFeedback) {
+            fbHtml = `<div class="feedback-card feedback-neutral">📌 Select an answer, then click Submit to check your answer</div>`;
+        }
+        
+        let actionButtons = '';
+        if (showFeedback) {
+            actionButtons = `<button class="btn-main next-mode" id="nextBtn">➡️ Next Question</button>`;
+        } else {
+            actionButtons = `<button class="btn-main" id="submitBtn">✅ Submit Answer</button>`;
+        }
+        
+        const html = `<div class="question-body">
+            <div class="question-text">${escapeHtml(q.text)}</div>
+            <div class="options-list">${optsHtml}</div>
+            <div class="action-area">
+                ${actionButtons}
+                <button class="btn-review" id="removeBtn">❌ Remove from this list</button>
+            </div>
+            ${fbHtml}
+            <hr>
+        </div>`;
+        
+        container.innerHTML = html;
+        
+        document.querySelectorAll('.option-item').forEach(div => {
+            div.addEventListener('click', () => selectAnswer(div.dataset.letter));
+        });
+        if (!showFeedback) document.getElementById('submitBtn')?.addEventListener('click', handleSubmit);
+        else document.getElementById('nextBtn')?.addEventListener('click', handleNext);
+        document.getElementById('removeBtn')?.addEventListener('click', removeCurrentFromList);
+    }
+
+    function showFinalScore() {
+        const correct = computeCorrect();
+        const total = questions.length;
+        const percent = Math.round(correct / total * 100);
+        const container = document.getElementById('dynamicContent');
+        container.innerHTML = `<div style="text-align:center;padding:2rem;">
+            <div style="font-size:1.2rem;color:#8B4513;">📚 ${escapeHtml(listName)} Completed!</div>
+            <div style="font-size:2rem;font-weight:800;">${correct}/${total}</div>
+            <div style="font-size:1.2rem;margin:8px;">${percent}%</div>
+            <button id="restartBtn" class="btn-main">🔄 Review All Again</button>
+            <a href="favorites.html" class="btn-main" style="background:#2b8c5e;text-decoration:none;display:inline-block;">📚 Back to My Lists</a>
+        </div>`;
+        document.getElementById('restartBtn')?.addEventListener('click', () => {
+            answersState.forEach(s => { s.submitted = false; s.selectedAnswer = null; s.isCorrect = false; });
+            currentIndex = 0;
+            tempSelectedAnswer = null;
+            showFeedback = false;
+            fullRender();
+            scrollToQuestion();
+        });
+    }
+
+    function fullRender() {
+        if (loading || !questions.length) return;
+        renderNav();
+        renderQuestion();
+        updateHeader();
+    }
+
+    function initScroll() { 
+        document.getElementById('scrollLeftBtn')?.addEventListener('click', () => {
+            const strip = document.getElementById('questionStrip'); 
+            if (strip) strip.scrollBy({ left: -200, behavior: 'smooth' });
+        }); 
+        document.getElementById('scrollRightBtn')?.addEventListener('click', () => {
+            const strip = document.getElementById('questionStrip'); 
+            if (strip) strip.scrollBy({ left: 200, behavior: 'smooth' });
+        }); 
+    }
+
+    function escapeHtml(s) { 
+        if (!s) return ''; 
+        return String(s).replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); 
+    }
+
+    async function init() {
+        const loggedIn = await checkUserSession();
+        if (!loggedIn) return;
+        listId = getQueryParam('list_id');
+        if (!listId) {
+            document.getElementById('dynamicContent').innerHTML = '<div class="loading-container">⚠️ No list selected.</div>';
+            return;
+        }
+        await loadQuestionsFromList();
+    }
+    init();
+</script>
+</body>
+</html>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>My Favorite Lists | MasterPass</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(145deg, #eef2f7 0%, #d4dce6 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header {
+            background: #228B22;
+            border-radius: 28px;
+            padding: 25px 30px;
+            color: white;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .header h1 { font-size: 1.8rem; }
+        .back-link {
+            background: rgba(255,255,255,0.15);
+            padding: 8px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            color: white;
+        }
+        .lists-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        .list-card {
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px -8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .list-card:hover { transform: translateY(-5px); }
+        .list-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #f8fafd 0%, #fff 100%);
+            border-bottom: 1px solid #e9edf2;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .list-icon { font-size: 2rem; }
+        .list-info { flex: 1; }
+        .list-name { font-size: 1.2rem; font-weight: 700; color: #0b2b44; }
+        .list-desc { font-size: 0.8rem; color: #7c8b9c; }
+        .list-stats {
+            padding: 12px 20px;
+            background: #f8fafd;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+        }
+        .list-footer { padding: 15px 20px 20px; display: flex; gap: 10px; }
+        .btn-view, .btn-delete {
+            flex: 1;
+            padding: 10px;
+            border-radius: 40px;
+            text-align: center;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .btn-view { background: #228B22; color: white; }
+        .btn-delete { background: #fee2e2; color: #dc2626; border: none; cursor: pointer; }
+        .create-card {
+            background: white;
+            border-radius: 24px;
+            padding: 25px;
+            text-align: center;
+            border: 2px dashed #ccc;
+            cursor: pointer;
+        }
+        .create-card:hover { background: #f8fafd; }
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: white; border-radius: 28px; padding: 30px;
+            width: 90%; max-width: 450px;
+        }
+        .modal-content input, .modal-content textarea {
+            width: 100%; padding: 12px; margin: 10px 0;
+            border: 1px solid #ddd; border-radius: 12px;
+        }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .modal-buttons button { flex: 1; padding: 12px; border-radius: 40px; border: none; cursor: pointer; }
+        .btn-save { background: #228B22; color: white; }
+        .btn-cancel { background: #e0e0e0; }
+        .login-required {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 1000;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .login-card {
+            background: white; border-radius: 28px; padding: 40px;
+            text-align: center; max-width: 400px;
+        }
+        @media (max-width: 768px) {
+            .lists-grid { grid-template-columns: 1fr; }
+            .header { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="mainContent" style="display: none;">
+        <div class="header">
+            <h1>⭐ My Favorite Lists</h1>
+            <a href="index.html" class="back-link">← Back to Library</a>
+        </div>
+        <div class="lists-grid" id="listsGrid"></div>
+    </div>
+
+    <div id="loginRequired" class="login-required" style="display: flex;">
+        <div class="login-card">
+            <h2>🔐 Login Required</h2>
+            <p>Please login to view your favorite questions.</p>
+            <a href="login.html" class="btn-view" style="display: inline-block; margin-top: 20px;">Go to Login</a>
+        </div>
+    </div>
+
+    <div id="createModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>📁 Create New List</h3>
+            <input type="text" id="newListName" placeholder="List name (e.g., 'High Yield', 'Must Review')">
+            <textarea id="newListDesc" rows="2" placeholder="Description (optional)"></textarea>
+            <input type="text" id="newListIcon" placeholder="Icon (e.g., ⭐, 📘, 🔥)" value="⭐">
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeCreateModal()">Cancel</button>
+                <button class="btn-save" onclick="createList()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isLoggedIn = false;
+        let currentUserId = null;
+
+        async function checkUserSession() {
+            const token = localStorage.getItem('session_token');
+            if (!token) return false;
+            try {
+                const response = await fetch('api/auth.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'verify', token: token })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    currentUserId = result.user_id;
+                    isLoggedIn = true;
+                    document.getElementById('loginRequired').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'block';
+                    loadLists();
+                    return true;
+                }
+            } catch(e) {}
+            return false;
+        }
+
+        async function loadLists() {
+            const token = localStorage.getItem('session_token');
+            const response = await fetch('api/favorite_lists.php?action=get_lists&token=' + token);
+            const result = await response.json();
+            
+            if (result.success) {
+                renderLists(result.lists);
+            }
+        }
+
+        function renderLists(lists) {
+            const container = document.getElementById('listsGrid');
+            container.innerHTML = `
+                <div class="create-card" onclick="showCreateModal()">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">➕</div>
+                    <h3>Create New List</h3>
+                    <p style="color: #7c8b9c;">Organize your favorite questions</p>
+                </div>
+                ${lists.map(list => `
+                    <div class="list-card">
+                        <div class="list-header">
+                            <div class="list-icon">${escapeHtml(list.icon || '⭐')}</div>
+                            <div class="list-info">
+                                <div class="list-name">${escapeHtml(list.list_name)}</div>
+                                <div class="list-desc">${escapeHtml(list.description || 'No description')}</div>
+                            </div>
+                        </div>
+                        <div class="list-stats">
+                            <span>📄 ${list.question_count} questions</span>
+                            <span>📅 ${new Date(list.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <div class="list-footer">
+                            <a href="view_list.html?list_id=${list.id}&name=${encodeURIComponent(list.list_name)}" class="btn-view">View Questions</a>
+                            <button class="btn-delete" onclick="deleteList(${list.id}, '${escapeHtml(list.list_name)}')">Delete</button>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function showCreateModal() {
+            document.getElementById('createModal').style.display = 'flex';
+        }
+
+        function closeCreateModal() {
+            document.getElementById('createModal').style.display = 'none';
+            document.getElementById('newListName').value = '';
+            document.getElementById('newListDesc').value = '';
+            document.getElementById('newListIcon').value = '⭐';
+        }
+
+        async function createList() {
+            const name = document.getElementById('newListName').value.trim();
+            const desc = document.getElementById('newListDesc').value.trim();
+            const icon = document.getElementById('newListIcon').value.trim();
+            
+            if (!name) {
+                alert('Please enter a list name');
+                return;
+            }
+            
+            const token = localStorage.getItem('session_token');
+            const response = await fetch('api/favorite_lists.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'create_list',
+                    token: token,
+                    list_name: name,
+                    description: desc,
+                    icon: icon
+                })
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                closeCreateModal();
+                loadLists();
+            } else {
+                alert('Error: ' + (result.error || 'Could not create list'));
+            }
+        }
+
+        async function deleteList(listId, listName) {
+            if (confirm(`Are you sure you want to delete "${listName}"? All questions in this list will also be removed.`)) {
+                const token = localStorage.getItem('session_token');
+                const response = await fetch('api/favorite_lists.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'delete_list',
+                        token: token,
+                        list_id: listId
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    loadLists();
+                } else {
+                    alert('Error deleting list');
+                }
+            }
+        }
+
+        function escapeHtml(s) {
+            if (!s) return '';
+            return s.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+        }
+
+        checkUserSession();
+    </script>
+</body>
+</html>

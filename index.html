@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>Surgical Quiz Library | MasterPass</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MasterPass">
+    <meta name="application-name" content="MasterPass">
+    <meta name="theme-color" content="#2c5f2d">
+    <meta name="msapplication-TileColor" content="#2c5f2d">
+    <meta name="msapplication-TileImage" content="/icons/icon-144.png">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.php">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link rel="shortcut icon" href="/favicon.ico">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #0b2b44 0%, #1a4d6f 50%, #2c7da0 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .library-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 50px;
+            padding: 30px 20px;
+            position: relative;
+        }
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.15);
+            padding: 10px 20px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            backdrop-filter: blur(10px);
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .user-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.2s;
+        }
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .install-btn {
+            background: #e67e22;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            margin-left: 10px;
+        }
+        .install-btn:hover {
+            background: #f39c12;
+            transform: scale(1.02);
+        }
+        .library-header h1 {
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .library-header p {
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            opacity: 0.9;
+        }
+        .library-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            margin-top: 15px;
+        }
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        .book-card {
+            background: white;
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .book-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 30px 50px -15px rgba(0, 0, 0, 0.4);
+        }
+        .book-cover {
+            height: 180px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .book-icon {
+            font-size: 4rem;
+            background: rgba(255,255,255,0.15);
+            width: 100px;
+            height: 100px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        .book-info {
+            padding: 25px;
+        }
+        .book-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0b2b44;
+            margin-bottom: 8px;
+        }
+        .book-edition {
+            font-size: 0.85rem;
+            color: #2c7da0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        .book-description {
+            font-size: 0.9rem;
+            color: #5a6874;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+        .book-meta {
+            display: flex;
+            gap: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e9edf2;
+            flex-wrap: wrap;
+        }
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: #7c8b9c;
+        }
+        .book-footer {
+            padding: 15px 25px 25px;
+        }
+        .start-btn {
+            display: block;
+            background: linear-gradient(135deg, #1d4d6f 0%, #2c7da0 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 1rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .start-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.75rem;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.2rem;
+        }
+        .error-message {
+            background: #fee2e2;
+            border-left: 5px solid #dc2626;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            color: #991b1b;
+            margin: 20px;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+            .books-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .library-header {
+                margin-bottom: 30px;
+                padding-top: 80px;
+            }
+            .user-info {
+                top: 10px;
+                right: 10px;
+                padding: 6px 12px;
+            }
+            .install-btn {
+                margin-left: 0;
+                padding: 5px 12px;
+                font-size: 0.7rem;
+            }
+            .book-title {
+                font-size: 1.3rem;
+            }
+            .book-meta {
+                gap: 12px;
+            }
+        }
+        @media (max-width: 480px) {
+            .book-cover {
+                height: 140px;
+            }
+            .book-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 2.5rem;
+            }
+            .book-info {
+                padding: 18px;
+            }
+            .book-footer {
+                padding: 10px 18px 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="library-header">
+        <div id="userInfo" class="user-info">
+            <a href="login.html" style="color: white; text-decoration: none; background: #e67e22; padding: 8px 16px; border-radius: 40px; font-size: 0.8rem;">🔑 Login / Register</a>
+        </div>
+        <h1>📚 Surgical Quiz Library</h1>
+        <p>Board Review Questions &amp; Self-Assessment</p>
+        <div class="library-badge">MasterPass | SESAP 17 | Shazad Anatomy | MOC</div>
+    </div>
+    
+    <div class="books-grid" id="booksGrid">
+        <div class="loading">Loading books...</div>
+    </div>
+    
+    <div class="footer">
+        <p>© Surgical Quiz Bank | Board Review Preparation</p>
+        <p>by ℳ. ℋ. 𝒜𝓁𝒷𝒶𝓀𝒶𝒶</p>
+    </div>
+</div>
+
+<script>
+    const API_AUTH = 'api/auth.php';
+    const API_BOOKS = 'api/get_books.php';
+    let currentUser = null;
+    let deferredPrompt = null;
+
+    // ============================================
+    // PWA INSTALLATION
+    // ============================================
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        showInstallButton();
+    });
+
+    function showInstallButton() {
+        const userInfoDiv = document.getElementById('userInfo');
+        if (userInfoDiv && !document.getElementById('installAppBtn') && deferredPrompt) {
+            const installBtn = document.createElement('button');
+            installBtn.id = 'installAppBtn';
+            installBtn.className = 'install-btn';
+            installBtn.innerHTML = '📲 Install App';
+            installBtn.onclick = async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    console.log(`User ${outcome} the installation`);
+                    deferredPrompt = null;
+                    installBtn.style.display = 'none';
+                }
+            };
+            userInfoDiv.appendChild(installBtn);
+        }
+    }
+    
+    window.addEventListener('appinstalled', () => {
+        console.log('App was installed successfully');
+        const installBtn = document.getElementById('installAppBtn');
+        if (installBtn) installBtn.style.display = 'none';
+    });
+
+    // ============================================
+    // USER SESSION
+    // ============================================
+    async function checkUserSession() {
+        const token = localStorage.getItem('session_token');
+        if (!token) {
+            showGuestInfo();
+            return false;
+        }
+        try {
+            const response = await fetch(API_AUTH, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'verify', token: token })
+            });
+            const result = await response.json();
+            if (result.success) {
+                currentUser = result.user_id;
+                const username = localStorage.getItem('username') || 'User';
+                showUserInfo(username);
+                return true;
+            } else {
+                localStorage.removeItem('session_token');
+                showGuestInfo();
+                return false;
+            }
+        } catch(e) {
+            console.error('Session check failed:', e);
+            showGuestInfo();
+            return false;
+        }
+    }
+
+    function showUserInfo(username) {
+        const userInfoDiv = document.getElementById('userInfo');
+        userInfoDiv.innerHTML = `
+            <span class="user-name">👤 ${escapeHtml(username)}</span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        `;
+        if (deferredPrompt) showInstallButton();
+    }
+
+    function showGuestInfo() {
+        const userInfoDiv = document.getElementById('userInfo');
+        userInfoDiv.innerHTML = `
+            <a href="login.html" style="color: white; text-decoration: none; background: #e67e22; padding: 8px 16px; border-radius: 40px; font-size: 0.8rem;">🔑 Login / Register</a>
+        `;
+        if (deferredPrompt) showInstallButton();
+    }
+
+    window.logout = async function() {
+        const token = localStorage.getItem('session_token');
+        if (token) {
+            await fetch(API_AUTH, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'logout', token: token })
+            }).catch(e => {});
+        }
+        localStorage.clear();
+        window.location.reload();
+    };
+
+    // ============================================
+    // FETCH BOOKS FROM DATABASE
+    // ============================================
+    async function fetchBooks() {
+        try {
+            const response = await fetch(API_BOOKS);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const result = await response.json();
+            if (result.success && Array.isArray(result.books)) {
+                return result.books;
+            } else {
+                throw new Error(result.error || 'Invalid response');
+            }
+        } catch(e) {
+            console.error('Failed to fetch books:', e);
+            return null;
+        }
+    }
+
+    // Helper: lighten/darken a hex color
+    function adjustColor(hex, percent) {
+        if (!hex || hex.length < 6) return '#2c7da0';
+        let r = parseInt(hex.slice(1, 3), 16);
+        let g = parseInt(hex.slice(3, 5), 16);
+        let b = parseInt(hex.slice(5, 7), 16);
+        r = Math.min(255, r + percent);
+        g = Math.min(255, g + percent);
+        b = Math.min(255, b + percent);
+        return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+    }
+
+    function escapeHtml(s) {
+        if (!s) return '';
+        return s.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+    }
+
+    // ============================================
+    // RENDER BOOKS DYNAMICALLY
+    // ============================================
+    async function renderBooks() {
+        const container = document.getElementById('booksGrid');
+        const books = await fetchBooks();
+        
+        if (!books || books.length === 0) {
+            container.innerHTML = `
+                <div class="error-message">
+                    ❌ No books available.<br>
+                    Please add books to the database.
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        for (const book of books) {
+            const bookLink = `chapters.html?book_id=${book.id}`;
+            const colorStart = book.color || '#1d4d6f';
+            const colorEnd = adjustColor(colorStart, 20);
+            
+            const metaItems = [];
+            if (book.author) metaItems.push(`<span class="meta-item">✍️ ${escapeHtml(book.author)}</span>`);
+            
+            html += `
+                <a href="${bookLink}" class="book-card">
+                    <div class="book-cover" style="background: linear-gradient(135deg, ${colorStart} 0%, ${colorEnd} 100%);">
+                        ${book.image_url ? 
+                            `<img src="${escapeHtml(book.image_url)}" alt="${escapeHtml(book.name)}" style="width:100%; height:100%; object-fit:cover;">` :
+                            `<div class="book-icon">${escapeHtml(book.icon || '📚')}</div>`
+                        }
+                    </div>
+                    <div class="book-info">
+                        <div class="book-title">${escapeHtml(book.name)}</div>
+                        <div class="book-edition">${escapeHtml(book.edition || 'MasterPass Edition')}</div>
+                        <div class="book-description">${escapeHtml(book.description || 'No description available.')}</div>
+                        <div class="book-meta">
+                            ${metaItems.join('')}
+                            <span class="meta-item">⭐ Self-Assessment</span>
+                            <span class="meta-item">✓ Cloud Sync</span>
+                        </div>
+                    </div>
+                    <div class="book-footer">
+                        <div class="start-btn">📖 Open Book →</div>
+                    </div>
+                </a>
+            `;
+        }
+        container.innerHTML = html;
+    }
+
+    // ============================================
+    // SERVICE WORKER REGISTRATION
+    // ============================================
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.php')
+                .then(reg => console.log('Service Worker registered:', reg))
+                .catch(err => console.log('Service Worker registration failed:', err));
+        });
+    }
+
+    // ============================================
+    // INITIALIZE EVERYTHING
+    // ============================================
+    async function init() {
+        await checkUserSession();
+        await renderBooks();
+    }
+    
+    init();
+</script>
+</body>
+</html>
