@@ -9,14 +9,14 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="MasterPass">
+    meta name="apple-mobile-web-app-title" content="MasterPass">
     <meta name="application-name" content="MasterPass">
     <meta name="theme-color" content="#2c5f2d">
     <meta name="msapplication-TileColor" content="#2c5f2d">
     <meta name="msapplication-TileImage" content="/icons/icon-144.png">
     
     <!-- Manifest -->
-    <link rel="manifest" href="/manifest.php">
+    <link rel="manifest" href="/manifest.json">
     
     <!-- Icons -->
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
@@ -295,8 +295,13 @@
 </div>
 
 <script>
-    const API_AUTH = 'https://relaxreading.rf.gd/api/auth.php';
-    const API_BOOKS = 'https://relaxreading.rf.gd/api/get_books.php';
+    // ============================================
+    // API CONFIGURATION - Point to InfinityFree
+    // ============================================
+    const API_BASE = 'https://relaxreading.rf.gd/api/';
+    const API_AUTH = API_BASE + 'auth.php';
+    const API_BOOKS = API_BASE + 'get_books.php';
+    
     let currentUser = null;
     let deferredPrompt = null;
 
@@ -492,7 +497,7 @@
     // ============================================
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.php')
+            navigator.serviceWorker.register('/sw.js')
                 .then(reg => console.log('Service Worker registered:', reg))
                 .catch(err => console.log('Service Worker registration failed:', err));
         });
